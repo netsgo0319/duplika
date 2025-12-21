@@ -9,6 +9,9 @@ import Create from "@/pages/create";
 import Dashboard from "@/pages/dashboard";
 import Chat from "@/pages/chat";
 import MyInfo from "@/pages/my-info";
+import TopicsToAvoid from "@/pages/topics-to-avoid";
+import ShareableLinks from "@/pages/shareable-links";
+import KeywordResponses from "@/pages/keyword-responses";
 
 function Router() {
   return (
@@ -18,6 +21,9 @@ function Router() {
       <Route path="/dashboard/:id" component={Dashboard} />
       <Route path="/test-chat" component={Chat} />
       <Route path="/my-info" component={MyInfo} />
+      <Route path="/topics-to-avoid" component={TopicsToAvoid} />
+      <Route path="/shareable-links" component={ShareableLinks} />
+      <Route path="/keyword-responses" component={KeywordResponses} />
       <Route component={NotFound} />
     </Switch>
   );

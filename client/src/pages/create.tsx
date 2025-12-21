@@ -2,12 +2,10 @@ import { MobileContainer } from "@/components/layout/mobile-container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import { ArrowLeft, Upload, Instagram, Youtube, FileText, CheckCircle2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import appIcon from "@assets/generated_images/duplika_app_icon.png";
 
 export default function Create() {
   const [step, setStep] = useState<"intro" | "upload" | "success">("intro");
@@ -31,10 +29,15 @@ export default function Create() {
             exit={{ opacity: 0, x: -20 }}
             className="flex flex-col h-full px-8 py-12 text-center"
           >
-            <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-200 flex items-center justify-center mb-8 shadow-xl shadow-primary/10">
-                    <img src={appIcon} alt="Duplika" className="w-full h-full object-cover rounded-2xl" />
-                </div>
+            <div className="w-full flex justify-start mb-4">
+                <Link href="/">
+                    <Button variant="ghost" size="icon" className="-ml-4">
+                        <ArrowLeft className="w-6 h-6" />
+                    </Button>
+                </Link>
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center pt-10">
                 <h1 className="text-3xl font-bold font-heading mb-4 text-foreground">
                     Engage more fans<br />with your Duplika
                 </h1>

@@ -1,6 +1,6 @@
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Heart, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +21,25 @@ const MOCK_DUPLIKAS = [
     avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=100&h=100",
     description: "Detailed reviews on latest tech and coding tips.",
     interactions: "850"
+  }
+];
+
+const POPULAR_DUPLIKAS = [
+  {
+    id: 3,
+    name: "Chris, the Talking Dog",
+    role: "Pet Influencer",
+    avatar: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=100&h=100",
+    description: "Barking wisdom and treat reviews.",
+    interactions: "50K"
+  },
+  {
+    id: 4,
+    name: "Chef Maria",
+    role: "Culinary Expert",
+    avatar: "https://images.unsplash.com/photo-1583394293214-28ded15ee548?auto=format&fit=crop&q=80&w=100&h=100",
+    description: "Italian recipes and cooking tips.",
+    interactions: "12K"
   }
 ];
 
@@ -71,22 +90,26 @@ export default function Home() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-dashed border-border">
-            <h3 className="text-sm font-semibold text-muted-foreground mb-4">Recommended for you</h3>
-            <div className="space-y-3 opacity-60 pointer-events-none grayscale">
-                <Card className="p-3 flex items-center gap-3 border-border/50 bg-secondary/10">
-                    <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
-                    <div className="space-y-2 flex-1">
-                        <div className="h-3 w-24 bg-muted rounded animate-pulse" />
-                        <div className="h-2 w-32 bg-muted rounded animate-pulse" />
-                    </div>
-                </Card>
-                 <Card className="p-3 flex items-center gap-3 border-border/50 bg-secondary/10">
-                    <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
-                    <div className="space-y-2 flex-1">
-                        <div className="h-3 w-24 bg-muted rounded animate-pulse" />
-                        <div className="h-2 w-32 bg-muted rounded animate-pulse" />
-                    </div>
-                </Card>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
+                Explore Populars <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">New</span>
+            </h3>
+            <div className="space-y-3">
+                {POPULAR_DUPLIKAS.map((duplika) => (
+                    <Card key={duplika.id} className="p-3 flex items-center gap-3 border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer">
+                        <Avatar className="h-10 w-10 border border-background shadow-sm">
+                            <AvatarImage src={duplika.avatar} />
+                            <AvatarFallback>{duplika.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm truncate">{duplika.name}</h3>
+                            <p className="text-[11px] text-muted-foreground truncate">{duplika.description}</p>
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium bg-background/50 px-2 py-1 rounded-full">
+                            <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                            {duplika.interactions}
+                        </div>
+                    </Card>
+                ))}
             </div>
         </div>
       </div>
