@@ -19,7 +19,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/create" component={Create} />
       <Route path="/dashboard/:id" component={Dashboard} />
-      <Route path="/test-chat" component={Chat} />
+      <Route path="/chat/:id" component={Chat} />
+      <Route path="/test-chat" component={() => <Chat />} /> {/* Backward compatibility */}
       <Route path="/my-info" component={MyInfo} />
       <Route path="/topics-to-avoid" component={TopicsToAvoid} />
       <Route path="/shareable-links" component={ShareableLinks} />

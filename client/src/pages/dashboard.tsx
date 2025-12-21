@@ -12,8 +12,11 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [isPublic, setIsPublic] = useState(true);
 
+  // Hardcoded ID for now, in real app this comes from params
+  const id = "1"; 
+
   const menuItems = [
-    { icon: MessageSquare, label: "Test my Duplika", href: "/test-chat", action: true },
+    { icon: MessageSquare, label: "Test my Duplika", href: `/chat/${id}`, action: true },
     { icon: BookOpen, label: "My Information", href: "/my-info" },
     { icon: Ban, label: "Topics to avoid", href: "/topics-to-avoid" },
     { icon: LinkIcon, label: "Shareable links", href: "/shareable-links" },

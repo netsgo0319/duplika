@@ -95,20 +95,22 @@ export default function Home() {
             </h3>
             <div className="space-y-4">
                 {POPULAR_DUPLIKAS.map((duplika) => (
-                    <Card key={duplika.id} className="p-3 flex items-center gap-3 border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer mb-3">
-                        <Avatar className="h-10 w-10 border border-background shadow-sm">
-                            <AvatarImage src={duplika.avatar} />
-                            <AvatarFallback>{duplika.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate">{duplika.name}</h3>
-                            <p className="text-[11px] text-muted-foreground truncate">{duplika.description}</p>
-                        </div>
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium bg-background/50 px-2 py-1 rounded-full">
-                            <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
-                            {duplika.interactions}
-                        </div>
-                    </Card>
+                    <Link key={duplika.id} href={duplika.id === 4 ? `/chat/${duplika.id}` : `/dashboard/${duplika.id}`}>
+                        <Card className="p-3 flex items-center gap-3 border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer mb-3">
+                            <Avatar className="h-10 w-10 border border-background shadow-sm">
+                                <AvatarImage src={duplika.avatar} />
+                                <AvatarFallback>{duplika.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-sm truncate">{duplika.name}</h3>
+                                <p className="text-[11px] text-muted-foreground truncate">{duplika.description}</p>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium bg-background/50 px-2 py-1 rounded-full">
+                                <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                                {duplika.interactions}
+                            </div>
+                        </Card>
+                    </Link>
                 ))}
             </div>
         </div>
