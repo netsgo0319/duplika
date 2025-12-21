@@ -1,6 +1,6 @@
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, MoreHorizontal, Heart, MessageCircle } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Heart } from "lucide-react";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,7 +49,7 @@ export default function Home() {
       <div className="px-6 py-8">
         <header className="flex items-center justify-between mb-8">
             <div>
-                <h1 className="text-2xl font-bold font-heading">My Duplikas</h1>
+                <h1 className="text-2xl font-bold font-heading">Duplika</h1>
                 <p className="text-sm text-muted-foreground">Manage your AI clones</p>
             </div>
             <Link href="/create">
@@ -59,7 +59,7 @@ export default function Home() {
             </Link>
         </header>
 
-        <div className="relative mb-6">
+        <div className="relative mb-8">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input 
                 type="text" 
@@ -68,10 +68,10 @@ export default function Home() {
             />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 mb-10">
             {MOCK_DUPLIKAS.map((duplika) => (
                 <Link key={duplika.id} href={`/dashboard/${duplika.id}`}>
-                    <Card className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors border-none shadow-sm cursor-pointer">
+                    <Card className="p-4 flex items-center gap-4 hover:bg-secondary/30 transition-colors border-none shadow-sm cursor-pointer mb-4">
                         <Avatar className="h-14 w-14 border-2 border-background shadow-sm">
                             <AvatarImage src={duplika.avatar} />
                             <AvatarFallback>{duplika.name[0]}</AvatarFallback>
@@ -93,9 +93,9 @@ export default function Home() {
             <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
                 Explore Populars <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">New</span>
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-4">
                 {POPULAR_DUPLIKAS.map((duplika) => (
-                    <Card key={duplika.id} className="p-3 flex items-center gap-3 border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer">
+                    <Card key={duplika.id} className="p-3 flex items-center gap-3 border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer mb-3">
                         <Avatar className="h-10 w-10 border border-background shadow-sm">
                             <AvatarImage src={duplika.avatar} />
                             <AvatarFallback>{duplika.name[0]}</AvatarFallback>

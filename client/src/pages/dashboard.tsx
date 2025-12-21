@@ -6,9 +6,11 @@ import { ArrowLeft, MessageSquare, BookOpen, Ban, Link as LinkIcon, MessageCircl
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+  const [isPublic, setIsPublic] = useState(true);
 
   const menuItems = [
     { icon: MessageSquare, label: "Test my Duplika", href: "/test-chat", action: true },
@@ -23,6 +25,15 @@ export default function Dashboard() {
     toast({
         title: "Link copied!",
         description: "Duplika URL copied to clipboard.",
+        duration: 2000,
+    });
+  };
+
+  const handlePublicToggle = (checked: boolean) => {
+    setIsPublic(checked);
+    toast({
+        title: checked ? "Duplika is now Public" : "Duplika is now Private",
+        description: checked ? "Anyone can find and chat with your Duplika." : "Only you can access your Duplika.",
         duration: 2000,
     });
   };
@@ -52,7 +63,7 @@ export default function Dashboard() {
                     <AvatarImage src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150" />
                     <AvatarFallback>IB</AvatarFallback>
                 </Avatar>
-                <div className="absolute bottom-4 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
+                <div className={`absolute bottom-4 right-0 w-6 h-6 border-2 border-white rounded-full transition-colors ${isPublic ? 'bg-green-500' : 'bg-gray-400'}`}></div>
             </div>
             
             <h1 className="text-2xl font-bold font-heading">Inbora</h1>
@@ -85,7 +96,7 @@ export default function Dashboard() {
             
             <div className="flex items-center gap-2 bg-background/50 px-4 py-2 rounded-full border border-border/50">
                 <span className="text-sm font-medium">Public Status</span>
-                <Switch checked={true} />
+                <Switch checked={isPublic} onCheckedChange={handlePublicToggle} />
             </div>
         </div>
       </div>
