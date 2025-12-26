@@ -104,12 +104,17 @@ export default function Chat() {
     });
   };
 
+  // Logic for Back Button:
+  // If ID is 4 (Maria) -> Go to Profile.
+  // Else (Inbora/Others) -> Go to Dashboard.
+  const backHref = id === "4" ? `/profile/${id}` : `/dashboard/${id}`;
+
   return (
     <MobileContainer showNav={false} className="bg-background">
       {/* Chat Header */}
       <header className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-md border-b border-border shadow-sm">
         <div className="flex items-center gap-3">
-            <Link href={`/dashboard/${id}`}>
+            <Link href={backHref}>
                 <Button variant="ghost" size="icon" className="-ml-2 h-9 w-9">
                     <ArrowLeft className="w-5 h-5" />
                 </Button>

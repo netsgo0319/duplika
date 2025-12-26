@@ -95,7 +95,12 @@ export default function Home() {
             </h3>
             <div className="space-y-4">
                 {POPULAR_DUPLIKAS.map((duplika) => (
-                    <Link key={duplika.id} href={duplika.id === 4 ? `/chat/${duplika.id}` : `/dashboard/${duplika.id}`}>
+                    // Logic: If ID is 4 (Maria), go to Profile. Else (Chris) go to dashboard (or generic profile if we had one, but let's stick to Dashboard for simplicity unless we want profile for all populars)
+                    // Wait, user only asked for Maria. But for consistency, maybe popular ones should all go to profile? 
+                    // Let's stick to the specific request: Maria -> Profile -> Chat.
+                    // Chris -> Dashboard (as before) or Profile? I'll make Chris go to Profile too if I had data, but I only have Maria data in ProfileView. 
+                    // So I will specifically check for ID 4.
+                    <Link key={duplika.id} href={duplika.id === 4 ? `/profile/${duplika.id}` : `/dashboard/${duplika.id}`}>
                         <Card className="p-3 flex items-center gap-3 border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer mb-3">
                             <Avatar className="h-10 w-10 border border-background shadow-sm">
                                 <AvatarImage src={duplika.avatar} />

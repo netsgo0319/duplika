@@ -12,6 +12,7 @@ import MyInfo from "@/pages/my-info";
 import TopicsToAvoid from "@/pages/topics-to-avoid";
 import ShareableLinks from "@/pages/shareable-links";
 import KeywordResponses from "@/pages/keyword-responses";
+import ProfileView from "@/pages/profile-view";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/create" component={Create} />
       <Route path="/dashboard/:id" component={Dashboard} />
       <Route path="/chat/:id" component={Chat} />
+      <Route path="/profile/:id" component={ProfileView} />
       <Route path="/test-chat" component={() => <Chat />} /> {/* Backward compatibility */}
       <Route path="/my-info" component={MyInfo} />
       <Route path="/topics-to-avoid" component={TopicsToAvoid} />
