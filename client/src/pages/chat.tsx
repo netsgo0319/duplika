@@ -29,6 +29,23 @@ const PERSONAS = {
       thumbnail: thumbnailImage
     }
   },
+  "3": {
+    name: "Chris",
+    role: "Pet Influencer",
+    avatar: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=100&h=100",
+    initialMessage: "Woof! 🐾 Looking for treat recommendations?",
+    color: "bg-amber-500",
+    responses: {
+      simple: "Bark! (The best bone is the T-Bone!)",
+      rich: "Woof woof! 🦴 I highly recommend the Organic T-Bone Delight. It's crunchy, savory, and keeps my teeth clean. 10/10 tail wags!"
+    },
+    source: {
+      name: "Dog Blog",
+      url: "https://dogblog.com",
+      timestamp: "Article",
+      thumbnail: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&q=80&w=300&h=300"
+    }
+  },
   "4": {
     name: "Chef Maria",
     role: "Culinary Expert",
@@ -105,9 +122,9 @@ export default function Chat() {
   };
 
   // Logic for Back Button:
-  // If ID is 4 (Maria) -> Go to Profile.
+  // If ID is 4 (Maria) OR 3 (Chris) -> Go to Profile.
   // Else (Inbora/Others) -> Go to Dashboard.
-  const backHref = id === "4" ? `/profile/${id}` : `/dashboard/${id}`;
+  const backHref = (id === "4" || id === "3") ? `/profile/${id}` : `/dashboard/${id}`;
 
   return (
     <MobileContainer showNav={false} className="bg-background">

@@ -11,7 +11,30 @@ import pizzaImage from "@assets/generated_images/wood_fired_pizza.png";
 import chefImage from "@assets/generated_images/chef_cooking.png";
 import dessertImage from "@assets/generated_images/tiramisu_dessert.png";
 
+import dogPlaying from "@assets/generated_images/golden_retriever_playing.png";
+import dogTreats from "@assets/generated_images/dog_treats.png";
+import dogSleeping from "@assets/generated_images/cute_puppy_sleeping.png";
+import dogGlasses from "@assets/generated_images/dog_wearing_glasses.png";
+
 const PROFILES = {
+  "3": {
+    name: "Chris, the Talking Dog",
+    role: "Pet Influencer",
+    avatar: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=150&h=150",
+    bio: "Barking wisdom, treat reviews, and lifestyle tips for the modern good boy. I speak human too!",
+    conversations: "50K",
+    followers: "120K",
+    handle: "ChrisTheDog",
+    active: true,
+    content: [
+      { id: 1, type: "image", src: dogPlaying },
+      { id: 2, type: "video", src: dogGlasses },
+      { id: 3, type: "image", src: dogTreats },
+      { id: 4, type: "image", src: dogSleeping },
+      { id: 5, type: "video", src: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=300&h=300" },
+      { id: 6, type: "image", src: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&q=80&w=300&h=300" }
+    ]
+  },
   "4": {
     name: "Chef Maria",
     role: "Culinary Expert",
@@ -20,21 +43,20 @@ const PROFILES = {
     conversations: "8.5K",
     followers: "4K",
     handle: "ChefMaria",
-    active: true
+    active: true,
+    content: [
+      { id: 1, type: "image", src: pastaImage },
+      { id: 2, type: "video", src: pizzaImage },
+      { id: 3, type: "image", src: chefImage },
+      { id: 4, type: "article", src: dessertImage },
+      { id: 5, type: "video", src: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&q=80&w=300&h=300" },
+      { id: 6, type: "image", src: "https://images.unsplash.com/photo-1476718408415-71080138dd2c?auto=format&fit=crop&q=80&w=300&h=300" },
+      { id: 7, type: "image", src: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=300&h=300" },
+      { id: 8, type: "video", src: "https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=300&h=300" },
+      { id: 9, type: "article", src: "https://images.unsplash.com/photo-1506354666786-959d6d497f1a?auto=format&fit=crop&q=80&w=300&h=300" },
+    ]
   }
 };
-
-const CONTENT_ITEMS = [
-  { id: 1, type: "image", src: pastaImage },
-  { id: 2, type: "video", src: pizzaImage },
-  { id: 3, type: "image", src: chefImage },
-  { id: 4, type: "article", src: dessertImage },
-  { id: 5, type: "video", src: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&q=80&w=300&h=300" },
-  { id: 6, type: "image", src: "https://images.unsplash.com/photo-1476718408415-71080138dd2c?auto=format&fit=crop&q=80&w=300&h=300" },
-  { id: 7, type: "image", src: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=300&h=300" },
-  { id: 8, type: "video", src: "https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=300&h=300" },
-  { id: 9, type: "article", src: "https://images.unsplash.com/photo-1506354666786-959d6d497f1a?auto=format&fit=crop&q=80&w=300&h=300" },
-];
 
 export default function ProfileView() {
   const [, params] = useRoute("/profile/:id");
@@ -130,7 +152,7 @@ export default function ProfileView() {
         </div>
         
         <div className="grid grid-cols-3 gap-1 px-1">
-            {CONTENT_ITEMS.map((item) => (
+            {profile.content.map((item: any) => (
                 <div key={item.id} className="aspect-square bg-muted relative group overflow-hidden cursor-pointer">
                     <img src={item.src} alt="Content" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
