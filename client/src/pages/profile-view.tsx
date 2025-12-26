@@ -6,6 +6,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import pastaImage from "@assets/generated_images/italian_pasta_dish.png";
+import pizzaImage from "@assets/generated_images/wood_fired_pizza.png";
+import chefImage from "@assets/generated_images/chef_cooking.png";
+import dessertImage from "@assets/generated_images/tiramisu_dessert.png";
+
 const PROFILES = {
   "4": {
     name: "Chef Maria",
@@ -14,16 +19,16 @@ const PROFILES = {
     bio: "Passionate about authentic Italian cuisine. I can help you cook delicious meals with simple ingredients.",
     conversations: "8.5K",
     followers: "4K",
-    handle: "maria",
+    handle: "ChefMaria",
     active: true
   }
 };
 
 const CONTENT_ITEMS = [
-  { id: 1, type: "image", src: "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?auto=format&fit=crop&q=80&w=300&h=300" },
-  { id: 2, type: "video", src: "https://images.unsplash.com/photo-1556910103-1c02745a30bf?auto=format&fit=crop&q=80&w=300&h=300" },
-  { id: 3, type: "image", src: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?auto=format&fit=crop&q=80&w=300&h=300" },
-  { id: 4, type: "article", src: "https://images.unsplash.com/photo-1543353071-087f9fbdd034?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 1, type: "image", src: pastaImage },
+  { id: 2, type: "video", src: pizzaImage },
+  { id: 3, type: "image", src: chefImage },
+  { id: 4, type: "article", src: dessertImage },
   { id: 5, type: "video", src: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&q=80&w=300&h=300" },
   { id: 6, type: "image", src: "https://images.unsplash.com/photo-1476718408415-71080138dd2c?auto=format&fit=crop&q=80&w=300&h=300" },
   { id: 7, type: "image", src: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=300&h=300" },
@@ -109,9 +114,11 @@ export default function ProfileView() {
                 <Button 
                     variant="outline"
                     onClick={handleCopyUrl}
-                    className="h-10 px-4 rounded-full border-primary/20 bg-background text-primary hover:bg-primary/5"
+                    className="h-10 px-4 rounded-full border-primary/20 bg-background text-primary hover:bg-primary/5 flex items-center gap-2"
                 >
-                    <LinkIcon className="w-4 h-4" />
+                    <LinkIcon className="w-3.5 h-3.5" />
+                    <span className="text-xs font-medium">duplika.me/{profile.handle}</span>
+                    <Copy className="w-3 h-3 text-muted-foreground/50 ml-1" />
                 </Button>
             </div>
         </div>
