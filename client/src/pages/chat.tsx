@@ -9,102 +9,106 @@ import { Link, useRoute } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Duplika, Message } from "@shared/schema";
 import thumbnailImage from "@assets/generated_images/youtube_thumbnail_makeup_tutorial.png";
+
+const PERSONAS = {
+  "1": {
+    name: "Inbora",
+    role: "Beauty YouTuber",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100",
+    initialMessage: "Hey! Ask me anything about makeup or my recent videos.",
+    color: "bg-green-500",
+    responses: {
+      simple: "I recommend Hince Cover Master Pink Cushion.",
+      rich: "I really recommend the Hince Cover Master Pink Cushion! It has much better coverage than the Two Slash Four one, and the finish is super even. It's perfect for dry skin like ours!"
+    },
+    source: {
+      name: "YouTube",
+      url: "https://youtube.com",
+      timestamp: "3:52",
+      thumbnail: thumbnailImage
+    }
+  },
+  "3": {
+    name: "Chris",
+    role: "Pet Influencer",
+    avatar: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=100&h=100",
+    initialMessage: "Woof! 🐾 Looking for treat recommendations?",
+    color: "bg-amber-500",
+    responses: {
+      simple: "Bark! (The best bone is the T-Bone!)",
+      rich: "Woof woof! 🦴 I highly recommend the Organic T-Bone Delight. It's crunchy, savory, and keeps my teeth clean. 10/10 tail wags!"
+    },
+    source: {
+      name: "Dog Blog",
+      url: "https://dogblog.com",
+      timestamp: "Article",
+      thumbnail: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&q=80&w=300&h=300"
+    }
+  },
+  "4": {
+    name: "Chef Maria",
+    role: "Culinary Expert",
+    avatar: "https://images.unsplash.com/photo-1583394293214-28ded15ee548?auto=format&fit=crop&q=80&w=100&h=100",
+    initialMessage: "Ciao! Ready to cook something delicious today?",
+    color: "bg-orange-500",
+    responses: {
+      simple: "Use San Marzano tomatoes for the best sauce.",
+      rich: "For an authentic sauce, you absolutely must use San Marzano tomatoes! They have the perfect balance of sweetness and acidity. Crush them by hand for the best texture!"
+    },
+    source: {
+      name: "Cooking Class",
+      url: "https://youtube.com",
+      timestamp: "12:15",
+      thumbnail: "https://images.unsplash.com/photo-1574868384238-d3a8ce720e70?auto=format&fit=crop&q=80&w=400&h=225"
+    }
+  }
+};
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:id");
-  const queryClient = useQueryClient();
-  const id = params?.id || "";
+  const id = params?.id || "1";
+  const persona = PERSONAS[id as keyof typeof PERSONAS] || PERSONAS["1"];
 
-  const { data: duplika, isLoading: duplikaLoading } = useQuery<Duplika>({
-    queryKey: [`/api/duplikas/${id}`],
-    enabled: !!id,
-  });
-
-  const { data: storedMessages = [] } = useQuery<Message[]>({
-    queryKey: [`/api/duplikas/${id}/messages`],
-    enabled: !!id,
-  });
-
-  const [messages, setMessages] = useState<Array<{ id: string | number, text: string, isUser: boolean, hasSource?: boolean }>>([]);
+  const [messages, setMessages] = useState([
+    { id: 1, text: persona.initialMessage, isUser: false },
+  ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [fanMode, setFanMode] = useState(false);
+  const [fanMode, setFanMode] = useState(false); // Default Off (Simple)
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const createMessageMutation = useMutation({
-    mutationFn: async (data: { content: string; isUser: boolean; fanMode: boolean }) => {
-      const res = await fetch(`/api/duplikas/${id}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, duplikaId: id }),
-      });
-      if (!res.ok) throw new Error("Failed to save message");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/duplikas/${id}/messages`] });
-    },
-  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    if (duplika && storedMessages.length === 0) {
-      setMessages([{ id: 'initial', text: duplika.firstMessage, isUser: false }]);
-    } else if (storedMessages.length > 0) {
-      setMessages(storedMessages.map(m => ({
-        id: m.id,
-        text: m.content,
-        isUser: m.isUser,
-        hasSource: m.fanMode && !m.isUser,
-      })));
-    }
-  }, [duplika, storedMessages]);
+    setMessages([{ id: 1, text: persona.initialMessage, isUser: false }]);
+  }, [id]);
 
   useEffect(scrollToBottom, [messages, isTyping]);
-
-  if (duplikaLoading || !duplika) {
-    return (
-      <MobileContainer>
-        <div className="flex items-center justify-center h-screen">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </MobileContainer>
-    );
-  }
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
 
-    const userMessage = inputValue.trim();
-    const newMsg = { id: Date.now(), text: userMessage, isUser: true };
+    const newMsg = { id: Date.now(), text: inputValue, isUser: true };
     setMessages((prev) => [...prev, newMsg]);
     setInputValue("");
     setIsTyping(true);
 
-    createMessageMutation.mutate({ content: userMessage, isUser: true, fanMode });
-
     // Simulate AI response
     setTimeout(() => {
         setIsTyping(false);
-        const responseText = fanMode 
-          ? `I'd love to help you with that! Based on what I know, here's my detailed advice on ${userMessage.toLowerCase()}. Feel free to ask for more specifics!`
-          : `Sure! Let me help with that.`;
+        const responseText = fanMode ? persona.responses.rich : persona.responses.simple;
         
         const aiResponse = { 
             id: Date.now() + 1, 
             text: responseText, 
             isUser: false,
-            hasSource: fanMode
+            hasSource: fanMode // Only show source card in Rich mode for extra detail (or always if desired, but sticking to 'rich' concept)
         };
         setMessages((prev) => [...prev, aiResponse]);
-        createMessageMutation.mutate({ content: responseText, isUser: false, fanMode });
     }, 1500);
   };
 
@@ -117,7 +121,10 @@ export default function Chat() {
     });
   };
 
-  const backHref = duplika.isPublic ? `/profile/${id}` : `/dashboard/${id}`;
+  // Logic for Back Button:
+  // If ID is 4 (Maria) OR 3 (Chris) -> Go to Profile.
+  // Else (Inbora/Others) -> Go to Dashboard.
+  const backHref = (id === "4" || id === "3") ? `/profile/${id}` : `/dashboard/${id}`;
 
   return (
     <MobileContainer showNav={false} className="bg-background">
@@ -132,14 +139,14 @@ export default function Chat() {
             <div className="flex items-center gap-3">
                 <div className="relative">
                     <Avatar className="h-9 w-9 border border-border">
-                        <AvatarImage src={duplika.avatar || undefined} />
-                        <AvatarFallback>{duplika.name[0]}</AvatarFallback>
+                        <AvatarImage src={persona.avatar} />
+                        <AvatarFallback>{persona.name[0]}</AvatarFallback>
                     </Avatar>
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-background rounded-full"></div>
+                    <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 ${persona.color} border-2 border-background rounded-full`}></div>
                 </div>
                 <div>
-                    <h2 className="font-semibold text-sm leading-none" data-testid="text-chat-name">{duplika.name}</h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{duplika.role}</p>
+                    <h2 className="font-semibold text-sm leading-none">{persona.name}</h2>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{persona.role}</p>
                 </div>
             </div>
         </div>
@@ -169,10 +176,10 @@ export default function Chat() {
                 {/* @ts-ignore */}
                 {msg.hasSource && (
                     <SourceCard 
-                        thumbnailUrl={thumbnailImage}
-                        sourceName="Knowledge Base"
-                        sourceUrl="#"
-                        timestamp="Source"
+                        thumbnailUrl={persona.source.thumbnail}
+                        sourceName={persona.source.name}
+                        sourceUrl={persona.source.url}
+                        timestamp={persona.source.timestamp}
                     />
                 )}
             </div>
@@ -203,8 +210,7 @@ export default function Chat() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={`Message ${duplika.name}...`}
-                data-testid="input-message"
+                placeholder={`Message ${persona.name}...`}
                 className="rounded-full bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary h-10 pl-4 pr-10"
             />
         </div>

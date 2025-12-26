@@ -7,53 +7,18 @@ import { ArrowLeft, Upload, Instagram, Youtube, FileText, CheckCircle2, Camera, 
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { InsertDuplika } from "@shared/schema";
 
 export default function Create() {
   const [step, setStep] = useState<"intro" | "profile" | "first-message" | "upload" | "success">("intro");
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-
-  const [formData, setFormData] = useState({
-    name: "",
-    handle: "",
-    role: "",
-    bio: "",
-    firstMessage: "",
-    avatar: "",
-  });
-
-  const createDuplikaMutation = useMutation({
-    mutationFn: async (data: InsertDuplika) => {
-      const res = await fetch("/api/duplikas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to create Duplika");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/duplikas"] });
-      setStep("success");
-    },
-  });
 
   const handleStart = () => setStep("profile");
   const handleProfileNext = () => setStep("first-message");
   const handleMessageNext = () => setStep("upload");
   
   const handleUpload = () => {
-    createDuplikaMutation.mutate({
-      name: formData.name,
-      handle: formData.handle,
-      role: formData.role,
-      bio: formData.bio,
-      firstMessage: formData.firstMessage,
-      avatar: formData.avatar || null,
-      isPublic: true,
-    });
+    // Simulate upload delay
+    setTimeout(() => setStep("success"), 1500);
   };
   const handleFinish = () => setLocation("/");
 
@@ -136,13 +101,7 @@ export default function Create() {
                         <Label>Display Name</Label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input 
-                              placeholder="e.g. Inbora" 
-                              className="pl-10 h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" 
-                              value={formData.name}
-                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                              data-testid="input-name"
-                            />
+                            <Input placeholder="e.g. Inbora" className="pl-10 h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
                         </div>
                     </div>
 
@@ -153,29 +112,16 @@ export default function Create() {
                                 <AtSign className="w-3.5 h-3.5" />
                                 duplika.me/
                             </div>
-                            <Input 
-                              placeholder="username" 
-                              className="pl-28 h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" 
-                              value={formData.handle}
-                              onChange={(e) => setFormData({ ...formData, handle: e.target.value })}
-                              data-testid="input-handle"
-                            />
+                            <Input placeholder="username" className="pl-28 h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex justify-between">
                             <Label>One-line Bio</Label>
-                            <span className="text-xs text-muted-foreground">{formData.bio.length}/80</span>
+                            <span className="text-xs text-muted-foreground">0/50</span>
                         </div>
-                        <Input 
-                          maxLength={80} 
-                          placeholder="Beauty YouTuber & Skincare Expert" 
-                          className="h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" 
-                          value={formData.role}
-                          onChange={(e) => setFormData({ ...formData, role: e.target.value, bio: e.target.value })}
-                          data-testid="input-bio"
-                        />
+                        <Input maxLength={50} placeholder="Beauty YouTuber & Skincare Expert" className="h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
                     </div>
                 </div>
 
@@ -218,9 +164,6 @@ export default function Create() {
                     <Textarea 
                         placeholder="Hey there! Ask me anything about my latest video or skincare routine! ✨" 
                         className="min-h-[140px] bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary p-4 text-base resize-none"
-                        value={formData.firstMessage}
-                        onChange={(e) => setFormData({ ...formData, firstMessage: e.target.value })}
-                        data-testid="input-first-message"
                     />
                 </div>
 
@@ -290,13 +233,8 @@ export default function Create() {
                 </section>
 
                 <div className="pt-8">
-                    <Button 
-                      onClick={handleUpload} 
-                      className="w-full h-12 text-base font-semibold rounded-xl"
-                      disabled={createDuplikaMutation.isPending}
-                      data-testid="button-start-training"
-                    >
-                        {createDuplikaMutation.isPending ? "Creating..." : "Start Training"}
+                    <Button onClick={handleUpload} className="w-full h-12 text-base font-semibold rounded-xl">
+                        Start Training
                     </Button>
                 </div>
             </div>
