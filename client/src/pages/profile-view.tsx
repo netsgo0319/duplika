@@ -1,9 +1,10 @@
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Share2, MoreVertical, Link as LinkIcon, Copy, MessageCircle, Users, MessageCircle as MsgIcon } from "lucide-react";
+import { ArrowLeft, Share2, MoreVertical, Link as LinkIcon, Copy, MessageCircle, Users, MessageCircle as MsgIcon, Play, FileText, ImageIcon } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PROFILES = {
   "4": {
@@ -17,6 +18,18 @@ const PROFILES = {
     active: true
   }
 };
+
+const CONTENT_ITEMS = [
+  { id: 1, type: "image", src: "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 2, type: "video", src: "https://images.unsplash.com/photo-1556910103-1c02745a30bf?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 3, type: "image", src: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 4, type: "article", src: "https://images.unsplash.com/photo-1543353071-087f9fbdd034?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 5, type: "video", src: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 6, type: "image", src: "https://images.unsplash.com/photo-1476718408415-71080138dd2c?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 7, type: "image", src: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 8, type: "video", src: "https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&q=80&w=300&h=300" },
+  { id: 9, type: "article", src: "https://images.unsplash.com/photo-1506354666786-959d6d497f1a?auto=format&fit=crop&q=80&w=300&h=300" },
+];
 
 export default function ProfileView() {
   const [, params] = useRoute("/profile/:id");
@@ -35,7 +48,7 @@ export default function ProfileView() {
 
   return (
     <MobileContainer>
-       <div className="bg-primary/5 min-h-[40vh] relative">
+       <div className="bg-primary/5 relative pb-6 rounded-b-[32px]">
         <div className="px-4 py-4 flex items-center justify-between relative z-10">
             <Link href="/">
                 <Button variant="ghost" size="icon" className="-ml-2">
@@ -52,64 +65,75 @@ export default function ProfileView() {
             </div>
         </div>
 
-        <div className="px-6 flex flex-col items-center text-center pb-10">
-            <div className="relative mt-4">
-                <Avatar className="h-28 w-28 border-4 border-background shadow-xl mb-5">
+        <div className="px-6 flex flex-col items-center text-center">
+            <div className="relative mt-2">
+                <Avatar className="h-24 w-24 border-4 border-background shadow-xl mb-3">
                     <AvatarImage src={profile.avatar} />
                     <AvatarFallback>{profile.name[0]}</AvatarFallback>
                 </Avatar>
                 {profile.active && (
-                    <div className="absolute bottom-4 right-1 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
+                    <div className="absolute bottom-3 right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
                 )}
             </div>
             
-            <h1 className="text-2xl font-bold font-heading mb-1">{profile.name}</h1>
-            <p className="text-sm font-medium text-primary mb-3">{profile.role}</p>
+            <h1 className="text-xl font-bold font-heading mb-0.5">{profile.name}</h1>
+            <p className="text-xs font-medium text-primary mb-2">{profile.role}</p>
             
-            <p className="text-sm text-muted-foreground mb-6 max-w-xs leading-relaxed">
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs leading-relaxed line-clamp-2">
                 {profile.bio}
             </p>
 
-            <div className="flex items-center gap-8 mb-8 text-sm">
+            <div className="flex items-center gap-8 mb-5 text-sm">
                 <div className="flex flex-col items-center">
-                    <span className="font-bold text-xl">{profile.conversations}</span>
-                    <span className="text-muted-foreground text-xs flex items-center gap-1 mt-1">
-                        <MsgIcon className="w-3 h-3" /> Conversations
+                    <span className="font-bold text-lg">{profile.conversations}</span>
+                    <span className="text-muted-foreground text-[10px] flex items-center gap-1 mt-0.5">
+                        <MsgIcon className="w-2.5 h-2.5" /> Conversations
                     </span>
                 </div>
-                 <div className="w-px h-10 bg-border"></div>
+                 <div className="w-px h-8 bg-border"></div>
                  <div className="flex flex-col items-center">
-                    <span className="font-bold text-xl">{profile.followers}</span>
-                    <span className="text-muted-foreground text-xs flex items-center gap-1 mt-1">
-                        <Users className="w-3 h-3" /> Followers
+                    <span className="font-bold text-lg">{profile.followers}</span>
+                    <span className="text-muted-foreground text-[10px] flex items-center gap-1 mt-0.5">
+                        <Users className="w-2.5 h-2.5" /> Followers
                     </span>
                 </div>
             </div>
 
-            <button 
-                onClick={handleCopyUrl}
-                className="flex items-center gap-2 bg-background px-4 py-2 rounded-full border border-primary/20 shadow-sm text-xs font-medium text-primary hover:bg-primary/5 transition-colors mb-8"
-            >
-                <LinkIcon className="w-3 h-3" />
-                duplika.me/{profile.handle}
-                <Copy className="w-3 h-3 text-muted-foreground/50 ml-1" />
-            </button>
-
-            <Link href={`/chat/${id}`}>
-                <Button className="w-full max-w-xs h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/25 animate-in zoom-in duration-300">
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    Start Chatting
+            <div className="flex gap-2 w-full max-w-xs">
+                 <Link href={`/chat/${id}`} className="flex-1">
+                    <Button className="w-full h-10 text-sm font-semibold rounded-full shadow-lg shadow-primary/20 animate-in zoom-in duration-300">
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Chat
+                    </Button>
+                </Link>
+                <Button 
+                    variant="outline"
+                    onClick={handleCopyUrl}
+                    className="h-10 px-4 rounded-full border-primary/20 bg-background text-primary hover:bg-primary/5"
+                >
+                    <LinkIcon className="w-4 h-4" />
                 </Button>
-            </Link>
+            </div>
         </div>
       </div>
       
-      {/* Additional content could go here, e.g., sample conversations or posts */}
-      <div className="px-6 py-8">
-        <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">About</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-            This AI clone is designed to share culinary expertise. Ask about Italian recipes, ingredient substitutions, or cooking techniques.
-        </p>
+      <div className="px-2 py-4">
+        <div className="flex items-center justify-between px-4 mb-2">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">About</h3>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-1 px-1">
+            {CONTENT_ITEMS.map((item) => (
+                <div key={item.id} className="aspect-square bg-muted relative group overflow-hidden cursor-pointer">
+                    <img src={item.src} alt="Content" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+                    <div className="absolute top-1 right-1">
+                        {item.type === 'video' && <Play className="w-4 h-4 text-white drop-shadow-md fill-white" />}
+                        {item.type === 'article' && <FileText className="w-4 h-4 text-white drop-shadow-md" />}
+                    </div>
+                </div>
+            ))}
+        </div>
       </div>
 
     </MobileContainer>
