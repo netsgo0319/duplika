@@ -2,7 +2,7 @@ import { MobileContainer } from "@/components/layout/mobile-container";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, MessageSquare, BookOpen, Ban, Link as LinkIcon, MessageCircle, Trash2, Edit2, Share2, MoreVertical, Copy, Users, MessageCircle as MsgIcon } from "lucide-react";
+import { ArrowLeft, MessageSquare, BookOpen, Ban, Link as LinkIcon, MessageCircle, Trash2, Edit2, Share2, MoreVertical, Copy, Users, MessageCircle as MsgIcon, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
@@ -17,6 +17,7 @@ export default function Dashboard() {
 
   const menuItems = [
     { icon: MessageSquare, label: "Test my Duplika", href: `/chat/${id}`, action: true },
+    { icon: User, label: "My Profile", href: "/my-profile" }, // New Item
     { icon: BookOpen, label: "My Information", href: "/my-info" },
     { icon: Ban, label: "Topics to avoid", href: "/topics-to-avoid" },
     { icon: LinkIcon, label: "Shareable links", href: "/shareable-links" },
