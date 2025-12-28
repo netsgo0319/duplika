@@ -3,21 +3,13 @@ import { pgTable, text, varchar, timestamp, integer, boolean } from "drizzle-orm
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).omit({ id: true });
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+// Export auth models (users and sessions tables from Replit Auth)
+export * from "./models/auth";
 
 // Duplikas table - AI personas created by users
 export const duplikas = pgTable("duplikas", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull(), // References auth users table
   displayName: text("display_name").notNull(),
   handle: text("handle").notNull().unique(),
   bio: text("bio").notNull(),
@@ -42,7 +34,7 @@ export type Duplika = typeof duplikas.$inferSelect;
 export const conversations = pgTable("conversations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   duplikaId: varchar("duplika_id").notNull().references(() => duplikas.id, { onDelete: "cascade" }),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }), // null for anonymous users
+  userId: varchar("user_id"), // null for anonymous users, references auth users table
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

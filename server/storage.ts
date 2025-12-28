@@ -1,8 +1,7 @@
 // Based on blueprint:javascript_database integration
 import { 
-  users, duplikas, conversations, messages, facts, qaPairs, 
+  duplikas, conversations, messages, facts, qaPairs, 
   topicsToAvoid, shareableLinks, keywordResponses,
-  type User, type InsertUser,
   type Duplika, type InsertDuplika,
   type Conversation, type InsertConversation,
   type Message, type InsertMessage,
@@ -16,11 +15,6 @@ import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
-  // Users
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  
   // Duplikas
   getDuplika(id: string): Promise<Duplika | undefined>;
   getDuplikaByHandle(handle: string): Promise<Duplika | undefined>;
@@ -70,22 +64,6 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // Users
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
-  }
-  
   // Duplikas
   async getDuplika(id: string): Promise<Duplika | undefined> {
     const [duplika] = await db.select().from(duplikas).where(eq(duplikas.id, id));
