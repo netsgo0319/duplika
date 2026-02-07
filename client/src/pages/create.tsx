@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Upload, Instagram, Youtube, FileText, CheckCircle2, Camera, User, AtSign, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, Instagram, Youtube, FileText, CheckCircle2, User, AtSign, MessageSquare, Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCreateDuplika } from "@/hooks/use-duplikas";
 import { toast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/image-upload";
 
 export default function Create() {
   const [step, setStep] = useState<"intro" | "profile" | "first-message" | "upload" | "success">("intro");
@@ -19,6 +20,7 @@ export default function Create() {
   const [displayName, setDisplayName] = useState("");
   const [handle, setHandle] = useState("");
   const [bio, setBio] = useState("");
+  const [avatar, setAvatar] = useState("");
   const [initialMessage, setInitialMessage] = useState("");
   const [createdId, setCreatedId] = useState<string | null>(null);
 
@@ -45,6 +47,7 @@ export default function Create() {
         displayName: displayName.trim(),
         handle: handle.trim().toLowerCase(),
         bio: bio.trim() || undefined,
+        avatar: avatar || undefined,
         initialMessage: initialMessage.trim() || undefined,
       });
       setCreatedId(duplika.id);
@@ -134,14 +137,12 @@ export default function Create() {
             </div>
 
             <div className="space-y-6">
-                <div className="flex flex-col items-center mb-6">
-                    <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center mb-3 relative cursor-pointer group hover:bg-secondary/80 transition-colors">
-                        <Camera className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background shadow-sm">
-                            <PlusIcon className="w-4 h-4" />
-                        </div>
-                    </div>
-                    <p className="text-sm font-medium text-muted-foreground">Upload Profile Photo</p>
+                <div className="mb-6">
+                    <ImageUpload
+                      currentImage={avatar || null}
+                      onImageChange={setAvatar}
+                      size="sm"
+                    />
                 </div>
 
                 <div className="space-y-4">

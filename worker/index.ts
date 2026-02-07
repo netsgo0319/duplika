@@ -1,49 +1,54 @@
 import { Worker, Job } from "bullmq";
 import IORedis from "ioredis";
+import { createCrawler } from "./crawlers/index";
 import { chunkText } from "./pipeline/chunker";
 import { embedTexts } from "./pipeline/embedder";
 import { storeChunks, deleteBySource } from "./pipeline/vectorStore";
+import type { CrawlResult } from "../shared/types";
 
 interface CrawlJobData {
   duplikaId: string;
   sourceUrl: string;
   sourceType: string;
-  rawText?: string;
 }
 
 async function processCrawlJob(job: Job<CrawlJobData>): Promise<void> {
-  const { duplikaId, sourceUrl, sourceType, rawText } = job.data;
+  const { duplikaId, sourceUrl, sourceType } = job.data;
 
-  // Step 1: Get raw text (from job data or future crawler integration)
+  // Step 1: Crawl source to get raw text
   await job.updateProgress(10);
+  console.log(`Crawling ${sourceType}: ${sourceUrl}`);
+  const crawler = createCrawler(sourceType);
+  const result = await crawler.crawl(sourceUrl);
+  const results: CrawlResult[] = Array.isArray(result) ? result : [result];
 
-  if (!rawText) {
-    throw new Error(`No rawText provided for source: ${sourceUrl}`);
+  let totalChunks = 0;
+
+  for (const item of results) {
+    if (!item.content) continue;
+
+    // Step 2: Chunk text
+    await job.updateProgress(30);
+    const chunks = await chunkText(item.content);
+    if (chunks.length === 0) continue;
+
+    // Step 3: Generate embeddings
+    await job.updateProgress(50);
+    const embeddings = await embedTexts(chunks);
+
+    // Step 4: Delete old chunks for this source (re-crawl scenario)
+    await job.updateProgress(70);
+    await deleteBySource(duplikaId, item.sourceUrl);
+
+    // Step 5: Store chunks + embeddings
+    await job.updateProgress(90);
+    await storeChunks(duplikaId, item.sourceType, item.sourceUrl, chunks, embeddings);
+    totalChunks += chunks.length;
   }
-
-  // Step 2: Chunk text
-  await job.updateProgress(30);
-  const chunks = await chunkText(rawText);
-  if (chunks.length === 0) {
-    console.log(`No chunks produced for ${sourceUrl}`);
-    return;
-  }
-
-  // Step 3: Generate embeddings
-  await job.updateProgress(50);
-  const embeddings = await embedTexts(chunks);
-
-  // Step 4: Delete old chunks for this source (re-crawl scenario)
-  await job.updateProgress(70);
-  await deleteBySource(duplikaId, sourceUrl);
-
-  // Step 5: Store chunks + embeddings
-  await job.updateProgress(90);
-  await storeChunks(duplikaId, sourceType, sourceUrl, chunks, embeddings);
 
   await job.updateProgress(100);
   console.log(
-    `Processed ${chunks.length} chunks for ${sourceType}: ${sourceUrl}`,
+    `Processed ${totalChunks} chunks for ${sourceType}: ${sourceUrl}`,
   );
 }
 

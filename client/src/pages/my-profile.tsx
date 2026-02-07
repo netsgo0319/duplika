@@ -1,13 +1,13 @@
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Camera, User, AtSign, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, User, AtSign, Save, Loader2 } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useDuplika, useUpdateDuplika } from "@/hooks/use-duplikas";
+import { ImageUpload } from "@/components/image-upload";
 
 export default function MyProfile() {
   const [, params] = useRoute("/my-profile/:id");
@@ -19,6 +19,7 @@ export default function MyProfile() {
   const [displayName, setDisplayName] = useState("");
   const [handle, setHandle] = useState("");
   const [bio, setBio] = useState("");
+  const [avatar, setAvatar] = useState("");
 
   // Sync form state when duplika data loads
   useEffect(() => {
@@ -26,12 +27,13 @@ export default function MyProfile() {
       setDisplayName(duplika.displayName);
       setHandle(duplika.handle);
       setBio(duplika.bio || "");
+      setAvatar(duplika.avatar || "");
     }
   }, [duplika]);
 
   const handleSave = async () => {
     try {
-      await updateDuplika.mutateAsync({ displayName, handle, bio });
+      await updateDuplika.mutateAsync({ displayName, handle, bio, avatar });
       toast({
         title: "Profile Updated",
         description: "Your profile information has been saved successfully.",
@@ -86,21 +88,12 @@ export default function MyProfile() {
 
       <div className="px-6 py-8 space-y-8">
         {/* Avatar Section */}
-        <div className="flex flex-col items-center">
-             <div className="relative group cursor-pointer">
-                <Avatar className="h-28 w-28 border-4 border-background shadow-lg">
-                    <AvatarImage src={duplika.avatar || undefined} />
-                    <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-                <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="w-8 h-8 text-white drop-shadow-md" />
-                </div>
-                <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background shadow-sm">
-                    <Camera className="w-4 h-4" />
-                </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-3 font-medium">Tap to change photo</p>
-        </div>
+        <ImageUpload
+          currentImage={avatar || null}
+          fallback={initials}
+          onImageChange={setAvatar}
+          size="lg"
+        />
 
         {/* Form Section */}
         <div className="space-y-6">

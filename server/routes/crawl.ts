@@ -1,13 +1,10 @@
 import { Router } from "express";
 import { storage } from "../storage";
 import { requireAuth } from "../auth";
-import { createCrawler } from "../../worker/crawlers/index";
-import type { CrawlResult } from "../../shared/types";
 
 const router = Router();
 
 // In-memory crawl status tracking (per source URL)
-// In production this would be backed by BullMQ job status
 const crawlJobs = new Map<
   string,
   { status: "pending" | "processing" | "completed" | "failed"; error?: string; startedAt: string }
@@ -21,12 +18,16 @@ async function getDuplikaIfOwner(duplikaId: string, userId: string) {
   return { error: null, duplika };
 }
 
-// POST /api/duplikas/:id/sources/crawl — Trigger crawling for all sources
+// POST /api/duplikas/:id/sources/crawl — Enqueue crawl jobs for all sources
 router.post("/:id/sources/crawl", requireAuth, async (req, res, next) => {
   try {
     const { error } = await getDuplikaIfOwner(req.params.id, req.user!.id);
     if (error === "not_found") return res.status(404).json({ message: "Duplika not found" });
     if (error === "forbidden") return res.status(403).json({ message: "Not authorized" });
+
+    if (!process.env.REDIS_URL) {
+      return res.status(503).json({ message: "Queue service unavailable (REDIS_URL not configured)" });
+    }
 
     const sources = await storage.getContentSourcesByDuplika(req.params.id);
     if (sources.length === 0) {
@@ -35,19 +36,28 @@ router.post("/:id/sources/crawl", requireAuth, async (req, res, next) => {
 
     const duplikaId = req.params.id;
 
-    // Process each source asynchronously
+    // Enqueue each source as a BullMQ job
+    const { Queue } = await import("bullmq");
+    const IORedis = (await import("ioredis")).default;
+    const connection = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
+    const queue = new Queue("crawl-pipeline", { connection });
+
     for (const source of sources) {
       const jobKey = `${duplikaId}:${source.sourceUrl}`;
       crawlJobs.set(jobKey, { status: "pending", startedAt: new Date().toISOString() });
 
-      // Fire-and-forget crawl processing
-      processCrawl(duplikaId, source.sourceType, source.sourceUrl, jobKey).catch(() => {
-        // Error already recorded in crawlJobs
+      await queue.add("crawl", {
+        duplikaId,
+        sourceUrl: source.sourceUrl,
+        sourceType: source.sourceType,
       });
     }
 
+    await queue.close();
+    await connection.quit();
+
     return res.json({
-      message: "Crawling started",
+      message: "Crawling queued",
       sourceCount: sources.length,
     });
   } catch (err) {
@@ -96,46 +106,6 @@ router.get("/:id/knowledge", requireAuth, async (req, res, next) => {
     next(err);
   }
 });
-
-// ─── Internal: process a crawl job ───────────────────────────────
-async function processCrawl(
-  duplikaId: string,
-  sourceType: string,
-  sourceUrl: string,
-  jobKey: string,
-): Promise<void> {
-  try {
-    crawlJobs.set(jobKey, { status: "processing", startedAt: crawlJobs.get(jobKey)!.startedAt });
-
-    const crawler = createCrawler(sourceType);
-    const result = await crawler.crawl(sourceUrl);
-
-    // Normalize to array
-    const results: CrawlResult[] = Array.isArray(result) ? result : [result];
-
-    // Store each crawl result as content chunks
-    for (const item of results) {
-      if (item.content) {
-        await storage.createContentChunk({
-          duplikaId,
-          sourceType: item.sourceType,
-          sourceUrl: item.sourceUrl,
-          chunkText: item.content,
-        });
-      }
-    }
-
-    crawlJobs.set(jobKey, { status: "completed", startedAt: crawlJobs.get(jobKey)!.startedAt });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    crawlJobs.set(jobKey, {
-      status: "failed",
-      error: message,
-      startedAt: crawlJobs.get(jobKey)!.startedAt,
-    });
-    throw err;
-  }
-}
 
 // Export for testing
 export { crawlJobs };
