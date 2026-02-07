@@ -62,12 +62,12 @@ npm run db:push       # Push Drizzle schema migrations to PostgreSQL
 - YouTube/Instagram은 URL 입력 방식, PDF만 파일 업로드 방식 (URL 입력 아님)
 
 ### AI 모델 구성 — 전부 Gemini
-- **LLM (응답 생성)**: Gemini 2.5 Pro — 채팅 응답 생성
+- **LLM (응답 생성)**: Gemini 2.5 Flash — 채팅 응답 생성
 - **임베딩 (벡터화)**: Gemini `text-embedding-004` (768차원) — 워커(콘텐츠 벡터화)와 서버(RAG 쿼리) 모두 동일 모델 사용
 - **⚠️ 임베딩 모델은 반드시 통일** — 차원이 같아도 모델이 다르면 벡터 공간이 달라 검색 불가. 워커와 서버가 반드시 같은 임베딩 모델을 사용해야 함
 - **Ollama 사용 안 함** — 이전에 로컬 임베딩용으로 사용했으나, 모델 불일치 문제로 제거. 모든 AI 호출은 Gemini API
 - **`GEMINI_API_KEY`는 Railway와 로컬 워커 모두 필요**
-- **RAG 흐름**: 유저 메시지 → Gemini 임베딩으로 쿼리 벡터화 → pgvector에서 유사 청크 검색 → facts/QA/topics 조회 → 시스템 프롬프트 구성 → Gemini 2.5 Pro로 응답 생성
+- **RAG 흐름**: 유저 메시지 → Gemini 임베딩으로 쿼리 벡터화 → pgvector에서 유사 청크 검색 → facts/QA/topics 조회 → 시스템 프롬프트 구성 → Gemini 2.5 Flash로 응답 생성
 
 ### Client Routes
 ```
