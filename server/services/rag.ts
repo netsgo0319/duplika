@@ -1,4 +1,3 @@
-import { Ollama } from "ollama";
 import { storage, type IStorage } from "../storage";
 import { embedText } from "../../worker/pipeline/embedder";
 import { searchSimilar } from "../../worker/pipeline/vectorStore";
@@ -153,27 +152,7 @@ const defaultDeps: RagDeps = {
       }
     }
 
-    // 2) Try Ollama (local only)
-    const ollamaUrl = process.env.OLLAMA_URL;
-    if (ollamaUrl) {
-      try {
-        const ollama = new Ollama({ host: ollamaUrl });
-
-        const response = await ollama.chat({
-          model: process.env.LLM_MODEL || "llama3",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userMessage },
-          ],
-        });
-
-        return response.message.content;
-      } catch {
-        // Fall through to fallback
-      }
-    }
-
-    // 3) Fallback message
+    // 2) Fallback message
     const nameMatch = systemPrompt.match(/You are ([^,]+)/);
     const name = nameMatch ? nameMatch[1] : "the persona";
     return `Thanks for your message! I'm ${name}. I'd be happy to help, but my AI backend is currently unavailable. Please try again later.`;

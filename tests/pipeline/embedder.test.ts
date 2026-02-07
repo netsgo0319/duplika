@@ -1,17 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Mock the Ollama module - factory must not reference outer variables
-vi.mock("ollama", () => {
-  const mockEmbed = vi.fn().mockResolvedValue({
-    embeddings: [Array(768).fill(0.1)],
-  });
-  return {
-    Ollama: vi.fn().mockImplementation(function () {
-      return { embed: mockEmbed };
-    }),
-  };
-});
-
 describe("embedder", () => {
   const originalEnv = { ...process.env };
   const originalFetch = globalThis.fetch;
@@ -22,9 +10,8 @@ describe("embedder", () => {
     vi.resetModules();
   });
 
-  describe("Gemini backend (no OLLAMA_URL)", () => {
+  describe("Gemini embedding backend", () => {
     beforeEach(() => {
-      delete process.env.OLLAMA_URL;
       process.env.GEMINI_API_KEY = "test-key";
     });
 
@@ -70,24 +57,12 @@ describe("embedder", () => {
       const { embedText } = await import("../../worker/pipeline/embedder");
       await expect(embedText("hello")).rejects.toThrow("Gemini embedding API error: 429");
     });
-  });
 
-  describe("Ollama backend (OLLAMA_URL set)", () => {
-    beforeEach(() => {
-      process.env.OLLAMA_URL = "http://localhost:11434";
-    });
+    it("throws when GEMINI_API_KEY is not set", async () => {
+      delete process.env.GEMINI_API_KEY;
 
-    it("embedText returns 768-dim vector", async () => {
       const { embedText } = await import("../../worker/pipeline/embedder");
-      const result = await embedText("hello world");
-      expect(result).toHaveLength(768);
-    });
-
-    it("embedTexts returns correct number of vectors", async () => {
-      const { embedTexts } = await import("../../worker/pipeline/embedder");
-      const results = await embedTexts(["text one", "text two"]);
-      expect(results).toHaveLength(2);
-      results.forEach((vec) => expect(vec).toHaveLength(768));
+      await expect(embedText("hello")).rejects.toThrow("GEMINI_API_KEY is not set");
     });
   });
 });

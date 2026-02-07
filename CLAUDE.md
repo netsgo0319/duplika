@@ -61,13 +61,12 @@ npm run db:push       # Push Drizzle schema migrations to PostgreSQL
 - **PDF 업로드 흐름**: 프론트엔드에서 파일 선택 → FileReader로 base64 변환 → 서버 `/upload-pdf` 엔드포인트에서 pdf-parse로 텍스트 추출 → BullMQ job에 `rawText` 포함하여 enqueue → 워커는 rawText가 있으면 크롤링 생략하고 바로 청킹/임베딩 진행. **PDF 원본 파일은 저장되지 않음** — 텍스트만 추출 후 벡터화
 - YouTube/Instagram은 URL 입력 방식, PDF만 파일 업로드 방식 (URL 입력 아님)
 
-### AI 모델 구성
-- **LLM (응답 생성)**: **Gemini 2.5 Pro** (`GEMINI_API_KEY`) — Railway 서버에서 채팅 응답 생성에 사용
-- **임베딩 (벡터화)**:
-  - **로컬 워커**: Ollama `nomic-embed-text` (768차원) — 크롤링한 콘텐츠를 벡터화하여 pgvector에 저장
-  - **Railway 서버**: Gemini `text-embedding-004` (768차원) — RAG 검색 시 유저 쿼리를 벡터화하여 유사 청크 검색
-  - 두 모델 모두 768차원이라 **호환 가능**
-- **Ollama는 임베딩 전용, 로컬에서만 사용** — LLM 용도로 사용하지 않음
+### AI 모델 구성 — 전부 Gemini
+- **LLM (응답 생성)**: Gemini 2.5 Pro — 채팅 응답 생성
+- **임베딩 (벡터화)**: Gemini `text-embedding-004` (768차원) — 워커(콘텐츠 벡터화)와 서버(RAG 쿼리) 모두 동일 모델 사용
+- **⚠️ 임베딩 모델은 반드시 통일** — 차원이 같아도 모델이 다르면 벡터 공간이 달라 검색 불가. 워커와 서버가 반드시 같은 임베딩 모델을 사용해야 함
+- **Ollama 사용 안 함** — 이전에 로컬 임베딩용으로 사용했으나, 모델 불일치 문제로 제거. 모든 AI 호출은 Gemini API
+- **`GEMINI_API_KEY`는 Railway와 로컬 워커 모두 필요**
 - **RAG 흐름**: 유저 메시지 → Gemini 임베딩으로 쿼리 벡터화 → pgvector에서 유사 청크 검색 → facts/QA/topics 조회 → 시스템 프롬프트 구성 → Gemini 2.5 Pro로 응답 생성
 
 ### Client Routes
@@ -124,9 +123,8 @@ Railway 배포 시 반드시 확인:
 2. **세션 쿠키**: 프로덕션에서 `secure: true` 설정. HTTPS 없이는 쿠키가 전달되지 않음
 3. **세션 저장소**: `connect-pg-simple`로 PostgreSQL에 저장. MemoryStore는 프로세스 재시작 시 세션 소멸
 4. **Railway 환경변수**: `DATABASE_URL`, `REDIS_URL`, `SESSION_SECRET`, `SLACK_WEBHOOK_URL`, `GEMINI_API_KEY`, `NODE_ENV=production`
-5. **로컬 워커 환경변수**: `DATABASE_URL`, `REDIS_URL`, `OLLAMA_URL` (임베딩 전용)
-6. **Gemini**: LLM(`gemini-2.5-pro`)과 Railway 임베딩(`text-embedding-004`) 모두 사용. `GEMINI_API_KEY` 필수
-7. **Ollama는 임베딩 전용, 로컬에서만** — LLM으로 사용하지 않음. 워커가 콘텐츠 벡터화할 때만 사용
+5. **로컬 워커 환경변수**: `DATABASE_URL`, `REDIS_URL`, `GEMINI_API_KEY`
+6. **Gemini**: LLM(`gemini-2.5-pro`)과 임베딩(`text-embedding-004`) 모두 Gemini 사용. Railway와 로컬 워커 모두 `GEMINI_API_KEY` 필수
 8. **DB 마이그레이션**: 스키마 변경 후 `npm run db:push` 실행 필수
 
 ## Agent Team Guidelines
