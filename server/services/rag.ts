@@ -122,9 +122,11 @@ const defaultDeps: RagDeps = {
     }
   },
   generateResponse: async (systemPrompt: string, userMessage: string): Promise<string> => {
-    // 1) Try Gemini API first if available
+    // 1) Try Gemini API
     const geminiKey = process.env.GEMINI_API_KEY;
-    if (geminiKey) {
+    if (!geminiKey) {
+      console.warn("[RAG] GEMINI_API_KEY not set, using fallback response");
+    } else {
       try {
         const model = process.env.GEMINI_MODEL || "gemini-2.5-pro";
         const response = await fetch(
@@ -146,9 +148,12 @@ const defaultDeps: RagDeps = {
           };
           const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (text) return text;
+          console.error("[RAG] Gemini returned empty response:", JSON.stringify(data));
+        } else {
+          console.error(`[RAG] Gemini API error ${response.status}:`, await response.text());
         }
-      } catch {
-        // Fall through to Ollama
+      } catch (err) {
+        console.error("[RAG] Gemini API call failed:", err);
       }
     }
 
