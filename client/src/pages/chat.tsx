@@ -7,8 +7,9 @@ import { Link, useRoute, useSearch } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useDuplika } from "@/hooks/use-duplikas";
-import { useCreateConversation, useChatMessages, useSendMessage } from "@/hooks/use-chat";
-import type { Message } from "@/lib/api";
+import { useCreateConversation, useChatMessages } from "@/hooks/use-chat";
+import { chatApi, type Message } from "@/lib/api";
+import { queryClient } from "@/lib/queryClient";
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:id");
@@ -29,7 +30,6 @@ export default function Chat() {
 
   const createConversation = useCreateConversation(duplikaId);
   const { data: serverMessages } = useChatMessages(conversationId ?? undefined);
-  const sendMessage = useSendMessage(conversationId ?? "");
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -101,13 +101,17 @@ export default function Chat() {
 
       setIsTyping(true);
 
-      // Send to API
-      const response = await sendMessage.mutateAsync(text);
+      // Call chatApi directly to avoid stale conversationId in hook
+      await chatApi.sendMessage(convId, text);
 
       // Remove optimistic message, server data will replace via query invalidation
       setOptimisticMessages((prev) =>
         prev.filter((m) => m.id !== optimisticId),
       );
+
+      queryClient.invalidateQueries({
+        queryKey: ["/api/chat/conversations", convId, "messages"],
+      });
 
       setIsTyping(false);
     } catch {
