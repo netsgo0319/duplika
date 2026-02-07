@@ -28,6 +28,13 @@ export default function Chat() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Sync query param → state when URL changes without remount
+  useEffect(() => {
+    if (queryConvId && queryConvId !== conversationId) {
+      setConversationId(queryConvId);
+    }
+  }, [queryConvId]);
+
   const createConversation = useCreateConversation(duplikaId);
   const { data: serverMessages } = useChatMessages(conversationId ?? undefined);
 
