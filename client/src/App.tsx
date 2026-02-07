@@ -16,6 +16,7 @@ import ShareableLinks from "@/pages/shareable-links";
 import KeywordResponses from "@/pages/keyword-responses";
 import ProfileView from "@/pages/profile-view";
 import MyProfile from "@/pages/my-profile";
+import ContentSources from "@/pages/content-sources";
 
 function Router() {
   return (
@@ -49,6 +50,9 @@ function Router() {
       </Route>
       <Route path="/keyword-responses/:id">
         {() => <RouteGuard><KeywordResponses /></RouteGuard>}
+      </Route>
+      <Route path="/content-sources/:id">
+        {() => <RouteGuard><ContentSources /></RouteGuard>}
       </Route>
       <Route component={NotFound} />
     </Switch>

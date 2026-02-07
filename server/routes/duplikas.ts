@@ -10,6 +10,7 @@ import {
   insertKeywordResponseSchema,
 } from "@shared/schema";
 import { z } from "zod";
+import { notifySlack } from "../services/slack";
 
 const router = Router();
 
@@ -40,6 +41,7 @@ router.post("/", requireAuth, async (req, res, next) => {
     }
 
     const duplika = await storage.createDuplika(parsed.data);
+    notifySlack(`New duplika created: *${duplika.displayName}* (@${duplika.handle})`);
     return res.status(201).json(duplika);
   } catch (err) {
     next(err);

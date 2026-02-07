@@ -1,10 +1,12 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import type { Express, RequestHandler } from "express";
 import { storage } from "./storage";
+import { pool } from "./db";
 import type { User } from "@shared/schema";
 
 const scryptAsync = promisify(scrypt);
@@ -36,7 +38,13 @@ declare global {
 }
 
 export function setupAuth(app: Express): void {
+  const PgSession = connectPgSimple(session);
+  const isProduction = process.env.NODE_ENV === "production";
+
   const sessionMiddleware = session({
+    store: pool
+      ? new PgSession({ pool, tableName: "session", createTableIfMissing: true })
+      : undefined,
     secret: process.env.SESSION_SECRET || "duplika-dev-secret",
     resave: false,
     saveUninitialized: false,
@@ -44,6 +52,7 @@ export function setupAuth(app: Express): void {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       httpOnly: true,
       sameSite: "lax",
+      secure: isProduction,
     },
   });
 

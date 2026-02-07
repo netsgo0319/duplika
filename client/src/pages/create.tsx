@@ -290,12 +290,6 @@ export default function Create() {
                             </div>
                             <Input placeholder="YouTube Channel URL" className="flex-1 h-10" />
                         </div>
-                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0 text-green-600">
-                                <FileText className="w-5 h-5" />
-                            </div>
-                            <Input placeholder="Blog / Website URL" className="flex-1 h-10" />
-                        </div>
                     </div>
                 </section>
 

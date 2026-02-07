@@ -2,6 +2,7 @@ import { Router } from "express";
 import { storage } from "../storage";
 import { requireAuth } from "../auth";
 import { insertContentSourceSchema } from "@shared/schema";
+import { notifySlack } from "../services/slack";
 
 const router = Router();
 
@@ -41,6 +42,7 @@ router.post("/:id/content-sources", requireAuth, async (req, res, next) => {
     }
 
     const source = await storage.createContentSource(parsed.data);
+    notifySlack(`Source added: [${parsed.data.sourceType}] ${parsed.data.sourceUrl} (duplika: ${req.params.id})`);
 
     // Enqueue BullMQ job if Redis is available
     if (process.env.REDIS_URL) {

@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, MessageSquare, BookOpen, Ban, Link as LinkIcon, MessageCircle, Trash2, Edit2, Share2, MoreVertical, Copy, Users, MessageCircle as MsgIcon, User, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageSquare, BookOpen, Ban, Link as LinkIcon, MessageCircle, Trash2, Edit2, Share2, MoreVertical, Copy, Users, MessageCircle as MsgIcon, User, Loader2, Database } from "lucide-react";
 import { Link, useLocation, useRoute } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
@@ -32,6 +32,7 @@ export default function Dashboard() {
   const menuItems = [
     { icon: MessageSquare, label: "Test my Duplika", href: `/chat/${id}`, action: true },
     { icon: User, label: "My Profile", href: `/my-profile/${id}` },
+    { icon: Database, label: "Content Sources", href: `/content-sources/${id}` },
     { icon: BookOpen, label: "My Information", href: `/my-info/${id}` },
     { icon: Ban, label: "Topics to avoid", href: `/topics-to-avoid/${id}` },
     { icon: LinkIcon, label: "Shareable links", href: `/shareable-links/${id}` },
@@ -114,12 +115,22 @@ export default function Dashboard() {
                 </Button>
             </Link>
             <div className="flex gap-2">
-                 <Button variant="ghost" size="icon">
+                 <Button variant="ghost" size="icon" onClick={() => {
+                   const url = `${window.location.origin}/profile/${duplika?.handle}`;
+                   if (navigator.share) {
+                     navigator.share({ title: duplika?.displayName, url }).catch(() => {});
+                   } else {
+                     navigator.clipboard.writeText(url);
+                     toast({ title: "Link copied!", duration: 2000 });
+                   }
+                 }}>
                     <Share2 className="w-5 h-5" />
                 </Button>
-                <Button variant="ghost" size="icon">
-                    <MoreVertical className="w-5 h-5" />
-                </Button>
+                <Link href={`/my-profile/${id}`}>
+                  <Button variant="ghost" size="icon">
+                    <Edit2 className="w-5 h-5" />
+                  </Button>
+                </Link>
             </div>
         </div>
 

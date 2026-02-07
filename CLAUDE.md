@@ -32,8 +32,10 @@ npm run db:push       # Push Drizzle schema migrations to PostgreSQL
 
 ### Backend (`server/`)
 - **Express 4** with JSON body parsing (includes raw body capture for webhooks)
+- `trust proxy` 활성화 — Railway 등 리버스 프록시 뒤에서 정상 동작
 - API routes go in `server/routes.ts`, prefixed with `/api`
-- **Storage interface** (`server/storage.ts`): `IStorage` defines CRUD methods. Currently uses `MemStorage` (in-memory). Ready to swap to PostgreSQL via Drizzle ORM
+- **Storage**: `DATABASE_URL` 있으면 `DatabaseStorage`(PostgreSQL), 없으면 `MemStorage`(메모리)
+- **세션**: `connect-pg-simple`로 PostgreSQL에 저장 (프로세스 재시작에도 유지). DB 없으면 MemoryStore
 - Request logging middleware auto-logs all `/api` calls with timing
 
 ### Shared (`shared/`)
@@ -66,11 +68,12 @@ npm run db:push       # Push Drizzle schema migrations to PostgreSQL
 /dashboard/:id       → Duplika management
 /chat/:id            → Chat interface
 /profile/:id         → Public profile view
-/my-profile          → Edit profile
-/my-info             → Facts & Q&A management
-/topics-to-avoid     → Restricted topics
-/shareable-links     → Social media links
-/keyword-responses   → Keyword-triggered responses
+/my-profile/:id      → Edit profile
+/my-info/:id         → Facts & Q&A management
+/content-sources/:id → YouTube/Instagram/PDF source management
+/topics-to-avoid/:id → Restricted topics
+/shareable-links/:id → Social media links
+/keyword-responses/:id → Keyword-triggered responses
 ```
 
 ## Testing
@@ -103,6 +106,16 @@ WS-0(DB 스키마) 완료 후 WS-1~4는 dependency 없이 병렬 착수 가능.
 배포: **Railway** (Web Service + PostgreSQL + Redis) / **Worker + Ollama는 로컬 실행**
 아키텍처 상세: `docs/architecture.md` 참조
 
+## Production / Deployment Checklist
+
+Railway 배포 시 반드시 확인:
+
+1. **`trust proxy`**: Express가 Railway 리버스 프록시를 신뢰하도록 `app.set('trust proxy', 1)` 필수
+2. **세션 쿠키**: 프로덕션에서 `secure: true` 설정. HTTPS 없이는 쿠키가 전달되지 않음
+3. **세션 저장소**: `connect-pg-simple`로 PostgreSQL에 저장. MemoryStore는 프로세스 재시작 시 세션 소멸
+4. **환경변수**: `DATABASE_URL`, `REDIS_URL`, `SESSION_SECRET`, `SLACK_WEBHOOK_URL`, `NODE_ENV=production`
+5. **DB 마이그레이션**: 스키마 변경 후 `npm run db:push` 실행 필수
+
 ## Agent Team Guidelines
 
 에이전트 팀으로 병렬 작업 시 반드시 지켜야 할 규칙:
@@ -111,3 +124,4 @@ WS-0(DB 스키마) 완료 후 WS-1~4는 dependency 없이 병렬 착수 가능.
 2. **End-to-End 흐름 리뷰**: 단위 테스트만으로는 부족. 리뷰 시 데이터가 **입력 → 처리 → 저장까지 전체 경로**를 통과하는지 추적
 3. **UI ↔ API 연결 확인**: 프론트엔드에 UI 요소(버튼, 아이콘 등)를 만들면 반드시 **기능 코드(onClick, API 호출 등)도 함께 구현**. 디자인만 있고 기능이 없는 스텁은 TODO 주석으로 명시
 4. **공유 인터페이스 문서화**: 여러 에이전트가 공유하는 인터페이스(큐 job 데이터, API 요청/응답 형태 등)는 `shared/types.ts`에 명시하고, 변경 시 양쪽 모두 업데이트
+5. **프로덕션 환경 고려**: 로컬에서 동작해도 프로덕션(리버스 프록시, HTTPS, DB 세션)에서 다르게 동작할 수 있음. 세션/쿠키/CORS 설정 반드시 프로덕션 조건으로 검증
