@@ -3,24 +3,72 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Upload, Instagram, Youtube, FileText, CheckCircle2, Camera, User, AtSign, MessageSquare } from "lucide-react";
+import { ArrowLeft, Upload, Instagram, Youtube, FileText, CheckCircle2, Camera, User, AtSign, MessageSquare, Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCreateDuplika } from "@/hooks/use-duplikas";
+import { toast } from "@/hooks/use-toast";
 
 export default function Create() {
   const [step, setStep] = useState<"intro" | "profile" | "first-message" | "upload" | "success">("intro");
   const [, setLocation] = useLocation();
+  const createDuplika = useCreateDuplika();
+
+  // Form state
+  const [displayName, setDisplayName] = useState("");
+  const [handle, setHandle] = useState("");
+  const [bio, setBio] = useState("");
+  const [initialMessage, setInitialMessage] = useState("");
+  const [createdId, setCreatedId] = useState<string | null>(null);
 
   const handleStart = () => setStep("profile");
-  const handleProfileNext = () => setStep("first-message");
-  const handleMessageNext = () => setStep("upload");
-  
-  const handleUpload = () => {
-    // Simulate upload delay
-    setTimeout(() => setStep("success"), 1500);
+
+  const handleProfileNext = () => {
+    if (!displayName.trim() || !handle.trim()) {
+      toast({
+        title: "Required fields",
+        description: "Please fill in display name and handle.",
+        variant: "destructive",
+        duration: 2000,
+      });
+      return;
+    }
+    setStep("first-message");
   };
-  const handleFinish = () => setLocation("/");
+
+  const handleMessageNext = () => setStep("upload");
+
+  const handleUpload = async () => {
+    try {
+      const duplika = await createDuplika.mutateAsync({
+        displayName: displayName.trim(),
+        handle: handle.trim().toLowerCase(),
+        bio: bio.trim() || undefined,
+        initialMessage: initialMessage.trim() || undefined,
+      });
+      setCreatedId(duplika.id);
+      setStep("success");
+    } catch (err: any) {
+      const message = err.message?.includes("409")
+        ? "This handle is already taken. Please choose another."
+        : "Failed to create duplika. Please try again.";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleFinish = () => {
+    if (createdId) {
+      setLocation(`/dashboard/${createdId}`);
+    } else {
+      setLocation("/");
+    }
+  };
 
   const handleBack = () => {
     if (step === "profile") setStep("intro");
@@ -32,7 +80,7 @@ export default function Create() {
     <MobileContainer showNav={false}>
       <AnimatePresence mode="wait">
         {step === "intro" && (
-          <motion.div 
+          <motion.div
             key="intro"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -54,14 +102,14 @@ export default function Create() {
                 <p className="text-muted-foreground mb-12 max-w-xs mx-auto leading-relaxed">
                     Create an AI clone that speaks like you, knows what you know, and interacts with your audience 24/7.
                 </p>
-                
+
                 <div className="space-y-6 w-full max-w-xs text-left">
                     <FeatureItem icon={CheckCircle2} text="Clone your unique tone & style" />
                     <FeatureItem icon={CheckCircle2} text="Answer fan questions automatically" />
                     <FeatureItem icon={CheckCircle2} text="Share personalized product links" />
                 </div>
             </div>
-            
+
             <div className="mt-8">
                 <Button onClick={handleStart} className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20">
                     Create My Duplika
@@ -101,7 +149,12 @@ export default function Create() {
                         <Label>Display Name</Label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input placeholder="e.g. Inbora" className="pl-10 h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
+                            <Input
+                              placeholder="e.g. Inbora"
+                              className="pl-10 h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                              value={displayName}
+                              onChange={(e) => setDisplayName(e.target.value)}
+                            />
                         </div>
                     </div>
 
@@ -112,16 +165,27 @@ export default function Create() {
                                 <AtSign className="w-3.5 h-3.5" />
                                 duplika.me/
                             </div>
-                            <Input placeholder="username" className="pl-28 h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
+                            <Input
+                              placeholder="username"
+                              className="pl-28 h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                              value={handle}
+                              onChange={(e) => setHandle(e.target.value.replace(/[^a-z0-9-_]/gi, "").toLowerCase())}
+                            />
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex justify-between">
                             <Label>One-line Bio</Label>
-                            <span className="text-xs text-muted-foreground">0/50</span>
+                            <span className="text-xs text-muted-foreground">{bio.length}/50</span>
                         </div>
-                        <Input maxLength={50} placeholder="Beauty YouTuber & Skincare Expert" className="h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
+                        <Input
+                          maxLength={50}
+                          placeholder="Beauty YouTuber & Skincare Expert"
+                          className="h-12 bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                        />
                     </div>
                 </div>
 
@@ -161,9 +225,11 @@ export default function Create() {
 
                 <div className="space-y-2">
                     <Label>Greeting Message</Label>
-                    <Textarea 
-                        placeholder="Hey there! Ask me anything about my latest video or skincare routine! ✨" 
+                    <Textarea
+                        placeholder="Hey there! Ask me anything about my latest video or skincare routine!"
                         className="min-h-[140px] bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary p-4 text-base resize-none"
+                        value={initialMessage}
+                        onChange={(e) => setInitialMessage(e.target.value)}
                     />
                 </div>
 
@@ -233,8 +299,19 @@ export default function Create() {
                 </section>
 
                 <div className="pt-8">
-                    <Button onClick={handleUpload} className="w-full h-12 text-base font-semibold rounded-xl">
-                        Start Training
+                    <Button
+                      onClick={handleUpload}
+                      disabled={createDuplika.isPending}
+                      className="w-full h-12 text-base font-semibold rounded-xl"
+                    >
+                        {createDuplika.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          "Create Duplika"
+                        )}
                     </Button>
                 </div>
             </div>
@@ -253,7 +330,7 @@ export default function Create() {
                 </div>
                 <h2 className="text-2xl font-bold font-heading mb-2">Duplika Created!</h2>
                 <p className="text-muted-foreground mb-8">
-                    Your digital twin is ready to be customized. We've processed your data and set up the basics.
+                    Your digital twin is ready to be customized. Head to the dashboard to add facts, Q&A, and more.
                 </p>
                 <Button onClick={handleFinish} className="w-full h-12 text-base font-semibold rounded-xl">
                     Go to Dashboard
