@@ -22,10 +22,10 @@ describe("embedder", () => {
     vi.resetModules();
   });
 
-  describe("OpenAI backend (no OLLAMA_URL)", () => {
+  describe("Gemini backend (no OLLAMA_URL)", () => {
     beforeEach(() => {
       delete process.env.OLLAMA_URL;
-      process.env.OPENAI_API_KEY = "test-key";
+      process.env.GEMINI_API_KEY = "test-key";
     });
 
     it("embedText returns 768-dim vector", async () => {
@@ -33,7 +33,7 @@ describe("embedder", () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          data: [{ embedding: mockEmbedding }],
+          embedding: { values: mockEmbedding },
         }),
       }) as unknown as typeof fetch;
 
@@ -46,12 +46,13 @@ describe("embedder", () => {
     it("embedTexts returns correct number of vectors", async () => {
       const texts = ["text one", "text two", "text three"];
       const mockEmbeddings = texts.map((_, i) => Array(768).fill(i * 0.1));
-      globalThis.fetch = vi.fn().mockResolvedValue({
+      let callCount = 0;
+      globalThis.fetch = vi.fn().mockImplementation(async () => ({
         ok: true,
         json: async () => ({
-          data: mockEmbeddings.map((embedding) => ({ embedding })),
+          embedding: { values: mockEmbeddings[callCount++] },
         }),
-      }) as unknown as typeof fetch;
+      })) as unknown as typeof fetch;
 
       const { embedTexts } = await import("../../worker/pipeline/embedder");
       const results = await embedTexts(texts);
@@ -67,7 +68,7 @@ describe("embedder", () => {
       }) as unknown as typeof fetch;
 
       const { embedText } = await import("../../worker/pipeline/embedder");
-      await expect(embedText("hello")).rejects.toThrow("OpenAI API error: 429");
+      await expect(embedText("hello")).rejects.toThrow("Gemini embedding API error: 429");
     });
   });
 
