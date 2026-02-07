@@ -1,29 +1,41 @@
 import { Worker, Job } from "bullmq";
 import IORedis from "ioredis";
 import { createCrawler } from "./crawlers/index";
+import { PdfCrawler } from "./crawlers/pdf";
 import { chunkText } from "./pipeline/chunker";
 import { embedTexts } from "./pipeline/embedder";
 import { storeChunks, deleteBySource } from "./pipeline/vectorStore";
 import type { CrawlResult } from "../shared/types";
+import { storage } from "../server/storage";
 
 interface CrawlJobData {
   duplikaId: string;
   sourceUrl: string;
   sourceType: string;
-  rawText?: string;
+  sourceId?: string;
 }
 
 async function processCrawlJob(job: Job<CrawlJobData>): Promise<void> {
-  const { duplikaId, sourceUrl, sourceType, rawText } = job.data;
+  const { duplikaId, sourceUrl, sourceType, sourceId } = job.data;
 
-  // Step 1: Get content — use rawText if provided (PDF upload), otherwise crawl
+  // Step 1: Get content
   await job.updateProgress(10);
   let results: CrawlResult[];
 
-  if (rawText) {
-    console.log(`Processing uploaded content for ${sourceType}: ${sourceUrl}`);
-    results = [{ sourceType: sourceType as CrawlResult["sourceType"], sourceUrl, title: sourceUrl, content: rawText, metadata: {} }];
+  if (sourceType === "pdf" && sourceId) {
+    // PDF: read base64 from DB, parse text
+    console.log(`Processing PDF from DB: ${sourceUrl}`);
+    const source = await storage.getContentSource(sourceId);
+    if (!source?.rawContent) {
+      throw new Error(`No rawContent found for source ${sourceId}`);
+    }
+    const base64Data = source.rawContent.includes(",") ? source.rawContent.split(",")[1] : source.rawContent;
+    const buffer = Buffer.from(base64Data, "base64");
+    const pdfCrawler = new PdfCrawler();
+    const result = await pdfCrawler.parseBuffer(buffer, sourceUrl);
+    results = [result];
   } else {
+    // YouTube/Instagram: crawl from URL
     console.log(`Crawling ${sourceType}: ${sourceUrl}`);
     const crawler = createCrawler(sourceType);
     const result = await crawler.crawl(sourceUrl);

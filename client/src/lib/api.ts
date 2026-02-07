@@ -100,6 +100,7 @@ export interface ContentSource {
   duplikaId: string;
   sourceType: string;
   sourceUrl: string;
+  rawContent: string | null;
   lastCrawledAt: string | null;
   createdAt: string;
   updatedAt: string;

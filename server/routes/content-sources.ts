@@ -81,30 +81,17 @@ router.post("/:id/content-sources/upload-pdf", requireAuth, async (req, res, nex
       return res.status(400).json({ message: "fileData (base64) is required" });
     }
 
-    // Decode base64 and extract text with pdf-parse
-    const base64Data = fileData.includes(",") ? fileData.split(",")[1] : fileData;
-    const buffer = Buffer.from(base64Data, "base64");
-
-    let textContent: string;
-    try {
-      const { PdfCrawler } = await import("../../worker/crawlers/pdf");
-      const crawler = new PdfCrawler();
-      const result = await crawler.parseBuffer(buffer, `upload://${fileName || "document.pdf"}`);
-      textContent = result.content;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return res.status(422).json({ message: `Failed to parse PDF: ${message}` });
-    }
-
+    // Store PDF base64 in DB — worker will extract text and embed later
     const sourceUrl = `upload://${fileName || "document.pdf"}`;
     const source = await storage.createContentSource({
       duplikaId: req.params.id,
       sourceType: "pdf",
       sourceUrl,
+      rawContent: fileData,
     });
     notifySlack(`PDF uploaded: ${fileName || "document.pdf"} (duplika: ${req.params.id})`);
 
-    // Enqueue with rawText so worker skips crawling
+    // Enqueue crawl job — worker reads rawContent from DB
     if (process.env.REDIS_URL) {
       try {
         const { Queue } = await import("bullmq");
@@ -113,9 +100,9 @@ router.post("/:id/content-sources/upload-pdf", requireAuth, async (req, res, nex
         const queue = new Queue("crawl-pipeline", { connection });
         await queue.add("crawl", {
           duplikaId: req.params.id,
+          sourceId: source.id,
           sourceUrl,
           sourceType: "pdf",
-          rawText: textContent,
         });
         await queue.close();
         await connection.quit();

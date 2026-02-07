@@ -440,6 +440,7 @@ export class MemStorage implements IStorage {
       duplikaId: insert.duplikaId,
       sourceType: insert.sourceType,
       sourceUrl: insert.sourceUrl,
+      rawContent: insert.rawContent ?? null,
       lastCrawledAt: null,
       createdAt: now,
       updatedAt: now,

@@ -237,6 +237,7 @@ export const contentSources = pgTable("content_sources", {
     .references(() => duplikas.id),
   sourceType: text("source_type").notNull(),
   sourceUrl: text("source_url").notNull(),
+  rawContent: text("raw_content"),
   lastCrawledAt: timestamp("last_crawled_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -246,6 +247,7 @@ export const insertContentSourceSchema = createInsertSchema(contentSources).pick
   duplikaId: true,
   sourceType: true,
   sourceUrl: true,
+  rawContent: true,
 });
 
 export type InsertContentSource = z.infer<typeof insertContentSourceSchema>;

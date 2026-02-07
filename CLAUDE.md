@@ -58,7 +58,7 @@ npm run db:push       # Push Drizzle schema migrations to PostgreSQL
 - Express와 별도 프로세스로 **로컬 머신에서 실행** (Railway에 올리지 않음)
 - Railway PostgreSQL/Redis에 `DATABASE_URL`, `REDIS_URL`로 원격 접속
 - 지원 소스: **YouTube** (자막 추출), **Instagram** (포스트), **PDF** (직접 파일 업로드)
-- **PDF 업로드 흐름**: 프론트엔드에서 파일 선택 → FileReader로 base64 변환 → 서버 `/upload-pdf` 엔드포인트에서 pdf-parse로 텍스트 추출 → BullMQ job에 `rawText` 포함하여 enqueue → 워커는 rawText가 있으면 크롤링 생략하고 바로 청킹/임베딩 진행. **PDF 원본 파일은 저장되지 않음** — 텍스트만 추출 후 벡터화
+- **PDF 업로드 흐름**: 프론트엔드에서 파일 선택 → FileReader로 base64 변환 → 서버가 `content_sources.raw_content` 컬럼에 base64 저장 → BullMQ job enqueue (sourceId 포함) → 워커가 DB에서 base64 읽어서 pdf-parse로 텍스트 추출 → 청킹 → Gemini 임베딩 → pgvector 저장. **PDF 원본은 DB `raw_content` 컬럼에 base64로 보관**
 - YouTube/Instagram은 URL 입력 방식, PDF만 파일 업로드 방식 (URL 입력 아님)
 
 ### AI 모델 구성 — 전부 Gemini
