@@ -100,6 +100,7 @@ export interface IStorage {
 
   // Content Sources
   getContentSourcesByDuplika(duplikaId: string): Promise<ContentSource[]>;
+  getContentSource(id: string): Promise<ContentSource | undefined>;
   createContentSource(source: InsertContentSource): Promise<ContentSource>;
   deleteContentSource(id: string): Promise<boolean>;
 
@@ -427,6 +428,10 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getContentSource(id: string): Promise<ContentSource | undefined> {
+    return this.contentSourcesMap.get(id);
+  }
+
   async createContentSource(insert: InsertContentSource): Promise<ContentSource> {
     const id = randomUUID();
     const now = new Date();
@@ -688,6 +693,11 @@ export class DatabaseStorage implements IStorage {
   // Content Sources
   async getContentSourcesByDuplika(duplikaId: string): Promise<ContentSource[]> {
     return db!.select().from(contentSources).where(eq(contentSources.duplikaId, duplikaId));
+  }
+
+  async getContentSource(id: string): Promise<ContentSource | undefined> {
+    const [s] = await db!.select().from(contentSources).where(eq(contentSources.id, id));
+    return s;
   }
 
   async createContentSource(insert: InsertContentSource): Promise<ContentSource> {

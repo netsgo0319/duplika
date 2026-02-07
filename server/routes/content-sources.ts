@@ -137,11 +137,17 @@ router.delete("/:id/content-sources/:sourceId", requireAuth, async (req, res, ne
     if (error === "not_found") return res.status(404).json({ message: "Duplika not found" });
     if (error === "forbidden") return res.status(403).json({ message: "Forbidden" });
 
+    const source = await storage.getContentSource(req.params.sourceId);
+    if (!source) {
+      return res.status(404).json({ message: "Content source not found" });
+    }
+
     const deleted = await storage.deleteContentSource(req.params.sourceId);
     if (!deleted) {
       return res.status(404).json({ message: "Content source not found" });
     }
 
+    notifySlack(`Source deleted: [${source.sourceType}] ${source.sourceUrl} (duplika: ${req.params.id})`);
     return res.json({ message: "Content source deleted" });
   } catch (err) {
     next(err);

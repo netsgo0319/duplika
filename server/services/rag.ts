@@ -123,58 +123,60 @@ const defaultDeps: RagDeps = {
     }
   },
   generateResponse: async (systemPrompt: string, userMessage: string): Promise<string> => {
-    // Try OpenAI API first if available
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (apiKey) {
+    // 1) Try Gemini API first if available
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
       try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+        const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: systemPrompt }] },
+              contents: [{ role: "user", parts: [{ text: userMessage }] }],
+              generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
+            }),
           },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userMessage },
-            ],
-            max_tokens: 500,
-            temperature: 0.7,
-          }),
-        });
+        );
 
         if (response.ok) {
           const data = (await response.json()) as {
-            choices: Array<{ message: { content: string } }>;
+            candidates: Array<{ content: { parts: Array<{ text: string }> } }>;
           };
-          return data.choices[0].message.content;
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) return text;
         }
       } catch {
         // Fall through to Ollama
       }
     }
 
-    // Try Ollama
-    try {
-      const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
-      const ollama = new Ollama({ host: ollamaUrl });
+    // 2) Try Ollama (local only)
+    const ollamaUrl = process.env.OLLAMA_URL;
+    if (ollamaUrl) {
+      try {
+        const ollama = new Ollama({ host: ollamaUrl });
 
-      const response = await ollama.chat({
-        model: process.env.LLM_MODEL || "llama3",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-      });
+        const response = await ollama.chat({
+          model: process.env.LLM_MODEL || "llama3",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+        });
 
-      return response.message.content;
-    } catch {
-      // Fallback: extract persona name from system prompt and return a basic response
-      const nameMatch = systemPrompt.match(/You are ([^,]+)/);
-      const name = nameMatch ? nameMatch[1] : "the persona";
-      return `Thanks for your message! I'm ${name}. I'd be happy to help, but my AI backend is currently unavailable. Please try again later.`;
+        return response.message.content;
+      } catch {
+        // Fall through to fallback
+      }
     }
+
+    // 3) Fallback message
+    const nameMatch = systemPrompt.match(/You are ([^,]+)/);
+    const name = nameMatch ? nameMatch[1] : "the persona";
+    return `Thanks for your message! I'm ${name}. I'd be happy to help, but my AI backend is currently unavailable. Please try again later.`;
   },
 };
 

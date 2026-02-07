@@ -115,7 +115,8 @@ Railway 배포 시 반드시 확인:
 1. **`trust proxy`**: Express가 Railway 리버스 프록시를 신뢰하도록 `app.set('trust proxy', 1)` 필수
 2. **세션 쿠키**: 프로덕션에서 `secure: true` 설정. HTTPS 없이는 쿠키가 전달되지 않음
 3. **세션 저장소**: `connect-pg-simple`로 PostgreSQL에 저장. MemoryStore는 프로세스 재시작 시 세션 소멸
-4. **환경변수**: `DATABASE_URL`, `REDIS_URL`, `SESSION_SECRET`, `SLACK_WEBHOOK_URL`, `NODE_ENV=production`
+4. **환경변수**: `DATABASE_URL`, `REDIS_URL`, `SESSION_SECRET`, `SLACK_WEBHOOK_URL`, `GEMINI_API_KEY`, `NODE_ENV=production`
+6. **LLM 우선순위**: Gemini (`GEMINI_API_KEY`) → Ollama (`OLLAMA_URL`, 로컬 전용) → fallback 메시지. Railway에는 `GEMINI_API_KEY` 필수
 5. **DB 마이그레이션**: 스키마 변경 후 `npm run db:push` 실행 필수
 
 ## Agent Team Guidelines
