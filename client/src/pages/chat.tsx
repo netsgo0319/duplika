@@ -3,7 +3,7 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Send, Sparkles, Loader2 } from "lucide-react";
-import { Link, useRoute } from "wouter";
+import { Link, useRoute, useSearch } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useDuplika } from "@/hooks/use-duplikas";
@@ -13,10 +13,12 @@ import type { Message } from "@/lib/api";
 export default function Chat() {
   const [, params] = useRoute("/chat/:id");
   const duplikaId = params?.id || "";
+  const search = useSearch();
+  const queryConvId = new URLSearchParams(search).get("conversation");
 
   const { data: duplika, isLoading: duplikaLoading } = useDuplika(duplikaId);
 
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(queryConvId);
   const [optimisticMessages, setOptimisticMessages] = useState<
     Array<{ id: string; text: string; isUser: boolean }>
   >([]);

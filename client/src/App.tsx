@@ -17,6 +17,7 @@ import KeywordResponses from "@/pages/keyword-responses";
 import ProfileView from "@/pages/profile-view";
 import MyProfile from "@/pages/my-profile";
 import ContentSources from "@/pages/content-sources";
+import Conversations from "@/pages/conversations";
 
 function Router() {
   return (
@@ -53,6 +54,9 @@ function Router() {
       </Route>
       <Route path="/content-sources/:id">
         {() => <RouteGuard><ContentSources /></RouteGuard>}
+      </Route>
+      <Route path="/conversations/:id">
+        {() => <RouteGuard><Conversations /></RouteGuard>}
       </Route>
       <Route component={NotFound} />
     </Switch>

@@ -149,12 +149,14 @@ export default function Dashboard() {
             </p>
 
             <div className="flex items-center gap-6 mb-6 text-sm">
-                <div className="flex flex-col items-center">
+                <Link href={`/conversations/${id}`}>
+                <div className="flex flex-col items-center cursor-pointer hover:opacity-70 transition-opacity">
                     <span className="font-bold text-lg">{stats?.conversationCount ?? 0}</span>
                     <span className="text-muted-foreground text-xs flex items-center gap-1">
                         <MsgIcon className="w-3 h-3" /> Conversations
                     </span>
                 </div>
+                </Link>
                  <div className="w-px h-8 bg-border"></div>
                  <div className="flex flex-col items-center">
                     <span className="font-bold text-lg">{(stats?.factsCount ?? 0) + (stats?.qaCount ?? 0)}</span>
