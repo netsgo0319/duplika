@@ -298,6 +298,16 @@ export function useCreateContentSource(duplikaId: string) {
   });
 }
 
+export function useUploadPdf(duplikaId: string) {
+  return useMutation({
+    mutationFn: (data: { fileName: string; fileData: string }) =>
+      contentSourcesApi.uploadPdf(duplikaId, data.fileName, data.fileData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/duplikas", duplikaId, "sources"] });
+    },
+  });
+}
+
 export function useDeleteContentSource(duplikaId: string) {
   return useMutation({
     mutationFn: (sourceId: string) => contentSourcesApi.delete(duplikaId, sourceId),

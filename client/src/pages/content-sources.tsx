@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Youtube, Instagram, FileText, Trash2, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Youtube, Instagram, FileText, Trash2, Plus, Loader2, Upload } from "lucide-react";
 import { Link, useRoute } from "wouter";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { useContentSources, useCreateContentSource, useDeleteContentSource } from "@/hooks/use-duplikas";
+import { useContentSources, useCreateContentSource, useDeleteContentSource, useUploadPdf } from "@/hooks/use-duplikas";
 
 const SOURCE_ICONS: Record<string, typeof Youtube> = {
   youtube: Youtube,
@@ -25,7 +25,6 @@ const SOURCE_COLORS: Record<string, string> = {
 const SOURCE_PLACEHOLDERS: Record<string, string> = {
   youtube: "https://youtube.com/watch?v=...",
   instagram: "https://www.instagram.com/p/...",
-  pdf: "https://example.com/document.pdf",
 };
 
 export default function ContentSources() {
@@ -35,9 +34,11 @@ export default function ContentSources() {
   const { data: sources, isLoading } = useContentSources(duplikaId);
   const createSource = useCreateContentSource(duplikaId);
   const deleteSource = useDeleteContentSource(duplikaId);
+  const uploadPdf = useUploadPdf(duplikaId);
 
   const [sourceType, setSourceType] = useState<string>("youtube");
   const [sourceUrl, setSourceUrl] = useState("");
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = async () => {
     if (!sourceUrl.trim()) {
@@ -51,6 +52,27 @@ export default function ContentSources() {
     } catch {
       toast({ title: "Failed to add source", variant: "destructive", duration: 2000 });
     }
+  };
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".pdf")) {
+      toast({ title: "Only PDF files are supported", variant: "destructive", duration: 2000 });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        await uploadPdf.mutateAsync({ fileName: file.name, fileData: reader.result as string });
+        toast({ title: "PDF uploaded", description: `${file.name} is being processed.`, duration: 3000 });
+      } catch {
+        toast({ title: "Failed to upload PDF", variant: "destructive", duration: 2000 });
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const handleDelete = async (sourceId: string) => {
@@ -84,9 +106,9 @@ export default function ContentSources() {
       </header>
 
       <div className="px-6 py-6 space-y-6">
-        {/* Add Source Form */}
+        {/* Add URL Source */}
         <div className="space-y-4">
-          <Label className="text-base font-semibold">Add Source</Label>
+          <Label className="text-base font-semibold">Add URL Source</Label>
           <div className="flex gap-2">
             <Select value={sourceType} onValueChange={setSourceType}>
               <SelectTrigger className="w-[140px]">
@@ -95,7 +117,6 @@ export default function ContentSources() {
               <SelectContent>
                 <SelectItem value="youtube">YouTube</SelectItem>
                 <SelectItem value="instagram">Instagram</SelectItem>
-                <SelectItem value="pdf">PDF</SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -119,6 +140,32 @@ export default function ContentSources() {
           </Button>
         </div>
 
+        {/* PDF Upload */}
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Upload PDF</Label>
+          <div
+            onClick={() => pdfInputRef.current?.click()}
+            className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer group"
+          >
+            {uploadPdf.isPending ? (
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-2" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform">
+                <Upload className="w-5 h-5 text-primary" />
+              </div>
+            )}
+            <p className="text-sm font-medium">{uploadPdf.isPending ? "Uploading..." : "Click to upload PDF"}</p>
+            <p className="text-xs text-muted-foreground mt-1">PDF text will be extracted and indexed</p>
+          </div>
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={handlePdfUpload}
+          />
+        </div>
+
         {/* Source List */}
         <div className="space-y-3">
           <Label className="text-base font-semibold">
@@ -127,13 +174,16 @@ export default function ContentSources() {
 
           {(!sources || sources.length === 0) && (
             <p className="text-sm text-muted-foreground py-4 text-center">
-              No sources added yet. Add a YouTube video, Instagram post, or PDF to train your Duplika.
+              No sources added yet. Add a YouTube video, Instagram post, or upload a PDF to train your Duplika.
             </p>
           )}
 
           {sources?.map((source) => {
             const Icon = SOURCE_ICONS[source.sourceType] || FileText;
             const colorClass = SOURCE_COLORS[source.sourceType] || "bg-gray-100 text-gray-600";
+            const displayUrl = source.sourceUrl.startsWith("upload://")
+              ? source.sourceUrl.replace("upload://", "")
+              : source.sourceUrl;
 
             return (
               <Card key={source.id} className="p-3 flex items-center gap-3">
@@ -142,7 +192,7 @@ export default function ContentSources() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium uppercase text-muted-foreground">{source.sourceType}</p>
-                  <p className="text-sm truncate">{source.sourceUrl}</p>
+                  <p className="text-sm truncate">{displayUrl}</p>
                 </div>
                 <Button
                   variant="ghost"

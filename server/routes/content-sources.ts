@@ -69,6 +69,67 @@ router.post("/:id/content-sources", requireAuth, async (req, res, next) => {
   }
 });
 
+// POST /api/duplikas/:id/content-sources/upload-pdf — Upload PDF file directly
+router.post("/:id/content-sources/upload-pdf", requireAuth, async (req, res, next) => {
+  try {
+    const { error } = await getDuplikaIfOwner(req.params.id, req.user!.id);
+    if (error === "not_found") return res.status(404).json({ message: "Duplika not found" });
+    if (error === "forbidden") return res.status(403).json({ message: "Forbidden" });
+
+    const { fileName, fileData } = req.body;
+    if (!fileData || typeof fileData !== "string") {
+      return res.status(400).json({ message: "fileData (base64) is required" });
+    }
+
+    // Decode base64 and extract text with pdf-parse
+    const base64Data = fileData.includes(",") ? fileData.split(",")[1] : fileData;
+    const buffer = Buffer.from(base64Data, "base64");
+
+    let textContent: string;
+    try {
+      const { PdfCrawler } = await import("../../worker/crawlers/pdf");
+      const crawler = new PdfCrawler();
+      const result = await crawler.parseBuffer(buffer, `upload://${fileName || "document.pdf"}`);
+      textContent = result.content;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return res.status(422).json({ message: `Failed to parse PDF: ${message}` });
+    }
+
+    const sourceUrl = `upload://${fileName || "document.pdf"}`;
+    const source = await storage.createContentSource({
+      duplikaId: req.params.id,
+      sourceType: "pdf",
+      sourceUrl,
+    });
+    notifySlack(`PDF uploaded: ${fileName || "document.pdf"} (duplika: ${req.params.id})`);
+
+    // Enqueue with rawText so worker skips crawling
+    if (process.env.REDIS_URL) {
+      try {
+        const { Queue } = await import("bullmq");
+        const IORedis = (await import("ioredis")).default;
+        const connection = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
+        const queue = new Queue("crawl-pipeline", { connection });
+        await queue.add("crawl", {
+          duplikaId: req.params.id,
+          sourceUrl,
+          sourceType: "pdf",
+          rawText: textContent,
+        });
+        await queue.close();
+        await connection.quit();
+      } catch (queueErr) {
+        console.error("Failed to enqueue PDF crawl job:", queueErr);
+      }
+    }
+
+    return res.status(201).json(source);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/duplikas/:id/content-sources/:sourceId — Remove source
 router.delete("/:id/content-sources/:sourceId", requireAuth, async (req, res, next) => {
   try {

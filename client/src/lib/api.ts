@@ -339,6 +339,11 @@ export const contentSourcesApi = {
     return res.json();
   },
 
+  uploadPdf: async (duplikaId: string, fileName: string, fileData: string): Promise<ContentSource> => {
+    const res = await apiRequest("POST", `/api/duplikas/${duplikaId}/content-sources/upload-pdf`, { fileName, fileData });
+    return res.json();
+  },
+
   delete: async (duplikaId: string, sourceId: string): Promise<void> => {
     await apiRequest("DELETE", `/api/duplikas/${duplikaId}/content-sources/${sourceId}`);
   },

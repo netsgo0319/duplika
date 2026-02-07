@@ -10,17 +10,25 @@ interface CrawlJobData {
   duplikaId: string;
   sourceUrl: string;
   sourceType: string;
+  rawText?: string;
 }
 
 async function processCrawlJob(job: Job<CrawlJobData>): Promise<void> {
-  const { duplikaId, sourceUrl, sourceType } = job.data;
+  const { duplikaId, sourceUrl, sourceType, rawText } = job.data;
 
-  // Step 1: Crawl source to get raw text
+  // Step 1: Get content — use rawText if provided (PDF upload), otherwise crawl
   await job.updateProgress(10);
-  console.log(`Crawling ${sourceType}: ${sourceUrl}`);
-  const crawler = createCrawler(sourceType);
-  const result = await crawler.crawl(sourceUrl);
-  const results: CrawlResult[] = Array.isArray(result) ? result : [result];
+  let results: CrawlResult[];
+
+  if (rawText) {
+    console.log(`Processing uploaded content for ${sourceType}: ${sourceUrl}`);
+    results = [{ sourceType: sourceType as CrawlResult["sourceType"], sourceUrl, title: sourceUrl, content: rawText, metadata: {} }];
+  } else {
+    console.log(`Crawling ${sourceType}: ${sourceUrl}`);
+    const crawler = createCrawler(sourceType);
+    const result = await crawler.crawl(sourceUrl);
+    results = Array.isArray(result) ? result : [result];
+  }
 
   let totalChunks = 0;
 
